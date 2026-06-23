@@ -245,6 +245,10 @@ Set in `.env.local` for development (gitignored). Set as Cloudflare Pages enviro
 
 # Implementation plan
 
+> **Status: Phases 0–7 implemented.** Engine has 22 passing Vitest tests; `tsc`
+> and `vite build` are green. Remaining work is operational (provision a real
+> Supabase project + deploy) and the post-MVP backlog below.
+
 Phased so the game is **playable end-to-end as early as possible**, then deepened. Each phase ends in a committable, verifiable state. The pure engine is the spine: it has zero Supabase/React imports and is fully unit-testable in isolation, then reused identically on the client (optimistic preview) and in the Edge Function (authority).
 
 ## Phase 0 — Project skeleton
