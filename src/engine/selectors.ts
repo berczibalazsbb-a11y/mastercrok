@@ -12,6 +12,9 @@ export function pendingActors(state: GameState): string[] {
     case 'vakharc':
       return state.players.filter((p) => p.committed == null).map((p) => p.userId);
     case 'ability':
+      if (state.battle?.pendingVictimDiscard) {
+        return [state.battle.pendingVictimDiscard.targetPlayerId];
+      }
       return state.battle ? [state.battle.abilityCursor] : [];
     default:
       return [];
@@ -40,6 +43,9 @@ export function phaseHint(state: GameState): string {
     case 'reveal':
       return 'Revealing…';
     case 'ability':
+      if (b?.pendingVictimDiscard) {
+        return `${short(b.pendingVictimDiscard.targetPlayerId)} must choose a card to discard (Executor).`;
+      }
       return `${short(b?.abilityCursor)}'s ability turn (${b?.declaredStat}).`;
     case 'vakharc':
       return 'Vakharc — blind battle.';

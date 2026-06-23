@@ -65,6 +65,8 @@ export interface BattleState {
   forcedWinnerId: string | null;
   /** Captain: Grand Battle active (sum of two cards' stat). */
   grandBattle: boolean;
+  /** Executor: waiting for the targeted player to choose which hand card to discard. */
+  pendingVictimDiscard: { executorPlayerId: string; targetPlayerId: string } | null;
   log: string[];
 }
 
@@ -105,7 +107,8 @@ export type Move =
   | { type: 'reserveAbility' }
   | { type: 'skipAbility' }
   | { type: 'resolve' }
-  | { type: 'commitVakharc'; cardId: number };
+  | { type: 'commitVakharc'; cardId: number }
+  | { type: 'chooseDiscard'; cardId: number };
 
 export interface DuelResult {
   stat: StatKey;

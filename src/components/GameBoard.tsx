@@ -13,6 +13,7 @@ export interface BoardActions {
   useAbility: (p?: AbilityPayload) => void;
   reserveAbility: () => void;
   skipAbility: () => void;
+  chooseDiscard: (cardId: number) => void;
 }
 
 export function GameBoard({

@@ -36,6 +36,7 @@ function abilityPhase(
     nullifiedPlayers: [],
     forcedWinnerId: null,
     grandBattle: false,
+    pendingVictimDiscard: null,
     log: [],
   };
   return {
@@ -151,6 +152,7 @@ describe('Samurai — immediate-nullify-all', () => {
         nullifiedPlayers: [],
         forcedWinnerId: null,
         grandBattle: false,
+        pendingVictimDiscard: null,
         log: [],
       },
       vakharcDepth: 0,
@@ -187,8 +189,8 @@ describe('Sumo — conditional-power-boost', () => {
   });
 });
 
-describe('Executor — force-opponent-discard (card choice)', () => {
-  it('sends the chosen card from the target hand to their loser pile', () => {
+describe('Executor — force-opponent-discard (victim choice)', () => {
+  it('victim chooses which hand card to send to their loser pile', () => {
     const g = abilityPhase(
       [
         mkPlayer('a', { committed: 7 }), // Executor
@@ -198,14 +200,19 @@ describe('Executor — force-opponent-discard (card choice)', () => {
       'a',
     );
     expect(canUseAbility(g, 'a')).toBe(true);
-    const s = ok(applyMove(g, { type: 'useAbility', payload: { targetPlayerId: 'b', cardId: 10 } }, 'a'));
+    // Step 1: Executor picks the target.
+    const mid = ok(applyMove(g, { type: 'useAbility', payload: { targetPlayerId: 'b' } }, 'a'));
+    expect(mid.phase).toBe('ability');
+    expect(mid.battle?.pendingVictimDiscard?.targetPlayerId).toBe('b');
+    // Step 2: Victim picks which card to discard.
+    const s = ok(applyMove(mid, { type: 'chooseDiscard', cardId: 10 }, 'b'));
     const b = s.players.find((p) => p.userId === 'b')!;
     expect(b.losers).toContain(10);
     expect(b.hand).not.toContain(10);
     expect(b.hand).toEqual([2, 5]);
   });
 
-  it('rejects a card not in the target hand', () => {
+  it('rejects a card not in the victim hand', () => {
     const g = abilityPhase(
       [
         mkPlayer('a', { committed: 7 }),
@@ -214,7 +221,8 @@ describe('Executor — force-opponent-discard (card choice)', () => {
       'power',
       'a',
     );
-    const r = applyMove(g, { type: 'useAbility', payload: { targetPlayerId: 'b', cardId: 99 } }, 'a');
+    const mid = ok(applyMove(g, { type: 'useAbility', payload: { targetPlayerId: 'b' } }, 'a'));
+    const r = applyMove(mid, { type: 'chooseDiscard', cardId: 99 }, 'b');
     expect(r.ok).toBe(false);
   });
 });

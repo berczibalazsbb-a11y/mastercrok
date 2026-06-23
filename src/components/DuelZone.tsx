@@ -11,6 +11,7 @@ interface Actions {
   useAbility: (p?: AbilityPayload) => void;
   reserveAbility: () => void;
   skipAbility: () => void;
+  chooseDiscard: (cardId: number) => void;
 }
 
 /** Archetypes that resolve with no extra input — a single "Use ability" button. */
@@ -98,10 +99,20 @@ export function DuelZone({
         </div>
       )}
 
+      {/* Victim discard prompt (Executor ability) */}
+      {state.phase === 'ability' &&
+        battle?.pendingVictimDiscard?.targetPlayerId === userId &&
+        me && (
+          <VictimDiscardPanel hand={me.hand} onChoose={actions.chooseDiscard} />
+        )}
+
       {/* Ability-phase controls */}
-      {state.phase === 'ability' && battle?.abilityCursor === userId && me && (
-        <AbilityPanel state={state} userId={userId} actions={actions} />
-      )}
+      {state.phase === 'ability' &&
+        !battle?.pendingVictimDiscard &&
+        battle?.abilityCursor === userId &&
+        me && (
+          <AbilityPanel state={state} userId={userId} actions={actions} />
+        )}
     </div>
   );
 }
@@ -203,31 +214,14 @@ function AbilityPanel({
         />
       )}
 
-      {/* Executor — pick a target, then which card in their hand to discard */}
+      {/* Executor — pick a target; the victim will choose which card to discard */}
       {usable && arch === 'force-opponent-discard' && (
         <div className="flex flex-col items-center gap-2">
-          {!targetPlayer ? (
-            <>
-              <span className="text-xs text-slate-300">Choose a player to hit:</span>
-              <TargetButtons
-                players={opponents.filter((o) => o.hand.length > 0)}
-                onPick={setTarget}
-              />
-            </>
-          ) : (
-            <>
-              <span className="text-xs text-slate-300">
-                Choose a card to send to {targetPlayer.userId.slice(0, 6)}'s loser pile:
-              </span>
-              <CardRow
-                cardIds={targetPlayer.hand}
-                onPick={(cardId) =>
-                  actions.useAbility({ targetPlayerId: targetPlayer.userId, cardId })
-                }
-              />
-              <BackLink onClick={() => setTarget(null)} />
-            </>
-          )}
+          <span className="text-xs text-slate-300">Choose a player to target:</span>
+          <TargetButtons
+            players={opponents.filter((o) => o.hand.length > 0)}
+            onPick={(id) => actions.useAbility({ targetPlayerId: id })}
+          />
         </div>
       )}
 
@@ -298,6 +292,23 @@ function AbilityPanel({
         </button>
       </div>
       {!usable && <p className="text-xs text-slate-400">No usable ability — skip or reserve.</p>}
+    </div>
+  );
+}
+
+function VictimDiscardPanel({
+  hand,
+  onChoose,
+}: {
+  hand: number[];
+  onChoose: (cardId: number) => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-lg bg-rose-900/40 p-3">
+      <p className="text-sm font-semibold text-rose-300">
+        Executor targets you — choose a card to discard:
+      </p>
+      <CardRow cardIds={hand} onPick={onChoose} />
     </div>
   );
 }

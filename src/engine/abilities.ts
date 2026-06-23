@@ -212,12 +212,8 @@ function applyLoop(
     case 'force-opponent-discard': {
       const target = player(state, payload?.targetPlayerId ?? '');
       if (target.hand.length === 0) throw new Error('Target has an empty hand.');
-      const cardId = payload?.cardId ?? target.hand[0];
-      const idx = target.hand.indexOf(cardId);
-      if (idx < 0) throw new Error("That card is not in the target's hand.");
-      target.hand.splice(idx, 1);
-      target.losers.push(cardId);
-      log(`${p.userId} forces ${target.userId} to discard ${getCard(cardId).name}.`);
+      b.pendingVictimDiscard = { executorPlayerId: p.userId, targetPlayerId: target.userId };
+      log(`${p.userId}'s Executor targets ${target.userId} — waiting for discard choice.`);
       break;
     }
     case 'buff-next-battle': {

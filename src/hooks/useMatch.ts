@@ -23,6 +23,7 @@ export interface UseMatch {
   useAbility: (payload?: AbilityPayload) => Promise<void>;
   reserveAbility: () => Promise<void>;
   skipAbility: () => Promise<void>;
+  chooseDiscard: (cardId: number) => Promise<void>;
 }
 
 /**
@@ -129,5 +130,6 @@ export function useMatch(matchId: string | null, userId: string | null): UseMatc
     useAbility: (payload) => send({ type: 'useAbility', payload }),
     reserveAbility: () => send({ type: 'reserveAbility' }),
     skipAbility: () => send({ type: 'skipAbility' }),
+    chooseDiscard: (cardId) => send({ type: 'chooseDiscard', cardId }),
   };
 }

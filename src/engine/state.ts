@@ -48,6 +48,7 @@ function freshBattle(attackerId: string): BattleState {
     nullifiedPlayers: [],
     forcedWinnerId: null,
     grandBattle: false,
+    pendingVictimDiscard: null,
     log: [],
   };
 }
@@ -361,6 +362,27 @@ export function applyMove(
       }
       me.abilityUsed = true;
       me.abilityReserved = false;
+      // Don't advance if waiting for the victim to choose which card to discard.
+      if (!draft.battle?.pendingVictimDiscard) {
+        advanceAbilityLoop(draft);
+      }
+      break;
+    }
+
+    case 'chooseDiscard': {
+      if (draft.phase !== 'ability') return err('Not the ability phase.');
+      const pending = draft.battle?.pendingVictimDiscard;
+      if (!pending) return err('No pending discard choice.');
+      if (pending.targetPlayerId !== byPlayerId)
+        return err('It is not your turn to choose.');
+      const idx = me.hand.indexOf(move.cardId);
+      if (idx < 0) return err('That card is not in your hand.');
+      me.hand.splice(idx, 1);
+      me.losers.push(move.cardId);
+      draft.battle!.log.push(
+        `${byPlayerId} discards ${getCard(move.cardId).name} (Executor).`,
+      );
+      draft.battle!.pendingVictimDiscard = null;
       advanceAbilityLoop(draft);
       break;
     }

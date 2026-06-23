@@ -89,6 +89,7 @@ export default function Match() {
           useAbility: m.useAbility,
           reserveAbility: m.reserveAbility,
           skipAbility: m.skipAbility,
+          chooseDiscard: m.chooseDiscard,
         }}
       />
     </div>
