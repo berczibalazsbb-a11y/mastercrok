@@ -274,7 +274,7 @@
         "archetype": "force-opponent-discard",
         "trigger": "onAbilityPhase",
         "optional": true,
-        "notes": "The TARGET player chooses which hand card to discard (not the Executor player). Reduces opponent's hand and may hurt their win-group count if they sacrifice a winner — but here it goes to LOSER pile from HAND, not from winner pile."
+        "notes": "MVP: the Executor's owner chooses the target player AND which of the target's hand cards is sent to the target's loser pile (a card-choice ability mirroring Devil's selection UI). The card moves from the target's HAND to their LOSER pile."
       },
       "image": "/cards/007.jpg",
       "imagePresent": true

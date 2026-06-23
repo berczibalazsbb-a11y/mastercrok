@@ -17,7 +17,8 @@ export function baseValue(player: PlayerState, stat: StatKey): number {
   if (player.extraCommitted != null) {
     value += getCard(player.extraCommitted).stats[stat];
   }
-  value += player.pendingBuffs.senseiAllStats ?? 0;
+  // Note: the Sensei buff is applied into battleMods at battle start, so it is
+  // surfaced via effectiveValue, not here.
   return value;
 }
 

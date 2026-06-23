@@ -70,7 +70,7 @@ function currentValues(state: GameState): Record<string, number> {
   for (const p of state.players) {
     const card = committedCard(p);
     if (!card) continue;
-    let v = card.stats[stat] + p.battleMods[stat] + (p.pendingBuffs.senseiAllStats ?? 0);
+    let v = card.stats[stat] + p.battleMods[stat];
     if (p.extraCommitted != null) v += getCard(p.extraCommitted).stats[stat];
     out[p.userId] = v;
   }
@@ -212,10 +212,12 @@ function applyLoop(
     case 'force-opponent-discard': {
       const target = player(state, payload?.targetPlayerId ?? '');
       if (target.hand.length === 0) throw new Error('Target has an empty hand.');
-      // MVP: target loses the first card in hand (a real sub-decision later).
-      const discarded = target.hand.shift()!;
-      target.losers.push(discarded);
-      log(`${p.userId} forces ${target.userId} to discard a card.`);
+      const cardId = payload?.cardId ?? target.hand[0];
+      const idx = target.hand.indexOf(cardId);
+      if (idx < 0) throw new Error("That card is not in the target's hand.");
+      target.hand.splice(idx, 1);
+      target.losers.push(cardId);
+      log(`${p.userId} forces ${target.userId} to discard ${getCard(cardId).name}.`);
       break;
     }
     case 'buff-next-battle': {

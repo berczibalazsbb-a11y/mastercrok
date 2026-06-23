@@ -114,11 +114,7 @@ function startBattle(state: GameState, attackerIndex: number): void {
   state.attackerIndex = attackerIndex;
 
   for (const p of state.players) {
-    p.committed = null;
-    p.extraCommitted = null;
-    p.abilityUsed = false;
-    p.abilityReserved = false;
-    p.battleMods = zeroMods();
+    resetForBattle(p);
     if (p.deck.length > 0) {
       p.hand.push(p.deck.shift()!);
     }
@@ -143,11 +139,7 @@ function enterVakharc(state: GameState, attackerIndex: number): void {
   state.battle = freshBattle(state.players[attackerIndex].userId);
 
   for (const p of state.players) {
-    p.committed = null;
-    p.extraCommitted = null;
-    p.abilityUsed = false;
-    p.abilityReserved = false;
-    p.battleMods = zeroMods();
+    resetForBattle(p);
     // Players with a deck place their top card face-down automatically.
     if (p.deck.length > 0) {
       p.committed = p.deck.shift()!;
@@ -160,6 +152,22 @@ function enterVakharc(state: GameState, attackerIndex: number): void {
 
 function allCommitted(state: GameState): boolean {
   return state.players.every((p) => p.committed != null);
+}
+
+/** Reset per-battle player state, consuming a pending Sensei buff into mods. */
+function resetForBattle(p: PlayerState): void {
+  p.committed = null;
+  p.extraCommitted = null;
+  p.abilityUsed = false;
+  p.abilityReserved = false;
+  p.battleMods = zeroMods();
+  const sensei = p.pendingBuffs.senseiAllStats ?? 0;
+  if (sensei) {
+    p.battleMods.power += sensei;
+    p.battleMods.intelligence += sensei;
+    p.battleMods.reflex += sensei;
+    p.pendingBuffs.senseiAllStats = 0;
+  }
 }
 
 /** After everyone has committed: reveal, fire immediate abilities, loop. */
@@ -242,7 +250,6 @@ function doResolve(state: GameState): void {
       if (p.extraCommitted != null) p.losers.push(p.extraCommitted);
       p.committed = null;
       p.extraCommitted = null;
-      p.pendingBuffs.senseiAllStats = 0;
     }
     finishOrContinue(state, result.winnerId);
   } else if (result.winnerId && result.tie) {
@@ -254,7 +261,6 @@ function doResolve(state: GameState): void {
       if (p.extraCommitted != null) p.losers.push(p.extraCommitted);
       p.committed = null;
       p.extraCommitted = null;
-      p.pendingBuffs.senseiAllStats = 0;
     }
     finishOrContinue(state, result.winnerId);
   } else {
@@ -265,7 +271,6 @@ function doResolve(state: GameState): void {
       if (p.extraCommitted != null) p.losers.push(p.extraCommitted);
       p.committed = null;
       p.extraCommitted = null;
-      p.pendingBuffs.senseiAllStats = 0;
     }
     const win = checkWinCondition(state);
     if (win.finished) {

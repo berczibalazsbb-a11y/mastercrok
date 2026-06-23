@@ -187,6 +187,98 @@ describe('Sumo — conditional-power-boost', () => {
   });
 });
 
+describe('Executor — force-opponent-discard (card choice)', () => {
+  it('sends the chosen card from the target hand to their loser pile', () => {
+    const g = abilityPhase(
+      [
+        mkPlayer('a', { committed: 7 }), // Executor
+        mkPlayer('b', { committed: 13, hand: [2, 5, 10] }),
+      ],
+      'power',
+      'a',
+    );
+    expect(canUseAbility(g, 'a')).toBe(true);
+    const s = ok(applyMove(g, { type: 'useAbility', payload: { targetPlayerId: 'b', cardId: 10 } }, 'a'));
+    const b = s.players.find((p) => p.userId === 'b')!;
+    expect(b.losers).toContain(10);
+    expect(b.hand).not.toContain(10);
+    expect(b.hand).toEqual([2, 5]);
+  });
+
+  it('rejects a card not in the target hand', () => {
+    const g = abilityPhase(
+      [
+        mkPlayer('a', { committed: 7 }),
+        mkPlayer('b', { committed: 13, hand: [2] }),
+      ],
+      'power',
+      'a',
+    );
+    const r = applyMove(g, { type: 'useAbility', payload: { targetPlayerId: 'b', cardId: 99 } }, 'a');
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe('Angel — recover-loser-to-hand (card choice)', () => {
+  it('returns the chosen loser card to hand', () => {
+    const g = abilityPhase(
+      [
+        mkPlayer('a', { committed: 5, losers: [3, 8, 12] }), // Angel
+        mkPlayer('b', { committed: 10 }),
+      ],
+      'power',
+      'a',
+    );
+    expect(canUseAbility(g, 'a')).toBe(true);
+    const s = ok(applyMove(g, { type: 'useAbility', payload: { cardId: 8 } }, 'a'));
+    const a = s.players.find((p) => p.userId === 'a')!;
+    expect(a.hand).toContain(8);
+    expect(a.losers).toEqual([3, 12]);
+  });
+});
+
+describe('Devil — copy-ability (card choice)', () => {
+  it('borrows a chosen loser ability (Sensei buff)', () => {
+    // a: Devil (#3). b has Sensei (#9, buff-next-battle) in their loser pile.
+    const g = abilityPhase(
+      [
+        mkPlayer('a', { committed: 3 }),
+        mkPlayer('b', { committed: 10, losers: [9] }),
+      ],
+      'power',
+      'a',
+    );
+    expect(canUseAbility(g, 'a')).toBe(true);
+    const s = ok(applyMove(g, { type: 'useAbility', payload: { targetPlayerId: 'b', cardId: 9 } }, 'a'));
+    const a = s.players.find((p) => p.userId === 'a')!;
+    // Sensei's buff was applied to Devil's owner.
+    expect(a.pendingBuffs.senseiAllStats).toBe(1);
+  });
+});
+
+describe('Sensei — buff-next-battle carries across battles', () => {
+  it('applies +1 to all stats at the start of the next battle', () => {
+    // a: Sensei (#9) with a deck so the game continues; b: Sumo (#10).
+    const g = abilityPhase(
+      [
+        mkPlayer('a', { committed: 9, deck: [2, 3] }),
+        mkPlayer('b', { committed: 10, deck: [4, 5] }),
+      ],
+      'power',
+      'a',
+    );
+    let s = ok(applyMove(g, { type: 'useAbility' }, 'a')); // Sensei buff
+    while (s.phase === 'ability') {
+      s = ok(applyMove(s, { type: 'skipAbility' }, s.battle!.abilityCursor));
+    }
+    // b (Sumo 8) beats a (Sensei 2); next battle begins.
+    expect(s.phase).toBe('declare');
+    const a = s.players.find((p) => p.userId === 'a')!;
+    expect(a.battleMods).toEqual({ power: 1, intelligence: 1, reflex: 1 });
+    expect(a.pendingBuffs.senseiAllStats).toBe(0);
+  });
+});
+
 describe('reserve (tartalékolás)', () => {
   it('costs a winning Crok and grants another pass', () => {
     const g = abilityPhase(
