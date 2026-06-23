@@ -8,6 +8,7 @@ import {
   applyAbility,
   effectiveValue,
 } from './abilities';
+import { zeroMods } from '../types/game';
 import type {
   GameState,
   PlayerState,
@@ -32,6 +33,7 @@ function emptyPlayer(userId: string, deck: number[]): PlayerState {
     winners: [],
     losers: [],
     pendingBuffs: {},
+    battleMods: zeroMods(),
     abilityUsed: false,
     abilityReserved: false,
   };
@@ -43,7 +45,7 @@ function freshBattle(attackerId: string): BattleState {
     attackerId,
     abilityCursor: attackerId,
     nullifiedGroups: [],
-    nullifyAll: false,
+    nullifiedPlayers: [],
     forcedWinnerId: null,
     grandBattle: false,
     log: [],
@@ -116,6 +118,7 @@ function startBattle(state: GameState, attackerIndex: number): void {
     p.extraCommitted = null;
     p.abilityUsed = false;
     p.abilityReserved = false;
+    p.battleMods = zeroMods();
     if (p.deck.length > 0) {
       p.hand.push(p.deck.shift()!);
     }
@@ -144,6 +147,7 @@ function enterVakharc(state: GameState, attackerIndex: number): void {
     p.extraCommitted = null;
     p.abilityUsed = false;
     p.abilityReserved = false;
+    p.battleMods = zeroMods();
     // Players with a deck place their top card face-down automatically.
     if (p.deck.length > 0) {
       p.committed = p.deck.shift()!;
@@ -212,6 +216,19 @@ function doResolve(state: GameState): void {
   }
   const result = compareValues(values, stat, battle.forcedWinnerId);
   battle.log.push(...result.log);
+
+  // Pancrator (afterBattle): if a Pancrator loses, the next battle is a Vakharc
+  // chosen by its owner. Captured before committed cards are cleared.
+  for (const p of state.players) {
+    if (
+      p.committed != null &&
+      getCard(p.committed).ability.archetype === 'trigger-vakharc-on-loss' &&
+      p.userId !== result.winnerId
+    ) {
+      state.forcedNextVakharc = { byPlayerId: p.userId };
+      battle.log.push(`${p.userId}'s Pancrator forces a Vakharc next battle.`);
+    }
+  }
 
   if (result.winnerId && !result.tie) {
     // Clean win: winner keeps their card; everyone else loses theirs.

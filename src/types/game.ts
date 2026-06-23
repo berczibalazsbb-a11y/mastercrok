@@ -18,6 +18,17 @@ export interface PendingBuffs {
   nextRoundAttacker?: boolean;
 }
 
+/** Per-battle stat deltas accumulated by abilities used this battle. */
+export interface BattleMods {
+  power: number;
+  intelligence: number;
+  reflex: number;
+}
+
+export function zeroMods(): BattleMods {
+  return { power: 0, intelligence: 0, reflex: 0 };
+}
+
 export interface PlayerState {
   userId: string;
   /** Card ids; top of deck = index 0. Server-authoritative order. */
@@ -33,7 +44,9 @@ export interface PlayerState {
   /** Loser pile (card ids). */
   losers: number[];
   pendingBuffs: PendingBuffs;
-  /** Used their ability this battle. */
+  /** Stat deltas from abilities used this battle (reset each battle). */
+  battleMods: BattleMods;
+  /** Used their ability this battle (used or permanently declined). */
   abilityUsed: boolean;
   /** Reserved (tartalékolás) — earns another pass this battle. */
   abilityReserved: boolean;
@@ -46,8 +59,8 @@ export interface BattleState {
   abilityCursor: string;
   /** Priest: groups whose abilities are nullified this battle. */
   nullifiedGroups: string[];
-  /** Samurai: all opponents' abilities nullified this battle. */
-  nullifyAll: boolean;
+  /** Samurai: specific player ids whose abilities are nullified this battle. */
+  nullifiedPlayers: string[];
   /** Sheriff: a winning-override has been claimed by this player. */
   forcedWinnerId: string | null;
   /** Captain: Grand Battle active (sum of two cards' stat). */

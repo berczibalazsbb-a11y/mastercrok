@@ -18,6 +18,7 @@ function mkPlayer(userId: string, over: Partial<PlayerState> = {}): PlayerState 
     winners: [],
     losers: [],
     pendingBuffs: {},
+    battleMods: { power: 0, intelligence: 0, reflex: 0 },
     abilityUsed: false,
     abilityReserved: false,
     ...over,
@@ -27,6 +28,15 @@ function mkPlayer(userId: string, over: Partial<PlayerState> = {}): PlayerState 
 function expectOk(r: ReturnType<typeof applyMove>): GameState {
   if (!r.ok) throw new Error(`expected ok, got error: ${r.error}`);
   return r.state;
+}
+
+/** Skip every ability so a battle resolves on vanilla stats. */
+function skipAbilities(g: GameState): GameState {
+  let guard = 0;
+  while (g.phase === 'ability' && guard++ < 50) {
+    g = expectOk(applyMove(g, { type: 'skipAbility' }, g.battle!.abilityCursor));
+  }
+  return g;
 }
 
 describe('createGame', () => {
@@ -45,26 +55,23 @@ describe('battle flow (vanilla, abilities stubbed)', () => {
     let g = createGame('m2', ['a', 'b'], [legalDeck(1), legalDeck(3)], 7);
     let guard = 0;
     while (g.phase !== 'finished' && guard++ < 500) {
-      const attacker = g.players[g.attackerIndex].userId;
-      g = expectOk(applyMove(g, { type: 'declareStat', stat: 'power' }, attacker));
-      // Each player commits their first hand card; last commit auto-resolves.
+      if (g.phase === 'declare') {
+        const atk = g.players[g.attackerIndex].userId;
+        g = expectOk(applyMove(g, { type: 'declareStat', stat: 'power' }, atk));
+      }
       for (const p of g.players) {
         if (g.phase === 'commit' && p.committed == null) {
           g = expectOk(applyMove(g, { type: 'commitCard', cardId: p.hand[0] }, p.userId));
         }
       }
-      // Handle a Vakharc that needs hand commits (empty decks).
       if (g.phase === 'vakharc') {
         for (const p of g.players) {
           if (p.committed == null && p.hand.length) {
             g = expectOk(applyMove(g, { type: 'commitVakharc', cardId: p.hand[0] }, p.userId));
           }
         }
-        if (g.phase === 'declare') {
-          const atk = g.players[g.attackerIndex].userId;
-          g = expectOk(applyMove(g, { type: 'declareStat', stat: 'power' }, atk));
-        }
       }
+      g = skipAbilities(g);
     }
     expect(g.phase).toBe('finished');
     expect(g.winnerId).not.toBeNull();
@@ -85,7 +92,7 @@ describe('battle flow (vanilla, abilities stubbed)', () => {
         attackerId: 'a',
         abilityCursor: 'a',
         nullifiedGroups: [],
-        nullifyAll: false,
+        nullifiedPlayers: [],
         forcedWinnerId: null,
         grandBattle: false,
         log: [],
@@ -98,6 +105,7 @@ describe('battle flow (vanilla, abilities stubbed)', () => {
     };
     let s = expectOk(applyMove(g, { type: 'commitCard', cardId: 10 }, 'a'));
     s = expectOk(applyMove(s, { type: 'commitCard', cardId: 2 }, 'b'));
+    s = skipAbilities(s);
     const a = s.players.find((p) => p.userId === 'a')!;
     const b = s.players.find((p) => p.userId === 'b')!;
     expect(a.winners).toContain(10);
@@ -121,7 +129,7 @@ describe('battle flow (vanilla, abilities stubbed)', () => {
         attackerId: 'a',
         abilityCursor: 'a',
         nullifiedGroups: [],
-        nullifyAll: false,
+        nullifiedPlayers: [],
         forcedWinnerId: null,
         grandBattle: false,
         log: [],
@@ -134,6 +142,7 @@ describe('battle flow (vanilla, abilities stubbed)', () => {
     };
     let s = expectOk(applyMove(g, { type: 'commitCard', cardId: 5 }, 'a'));
     s = expectOk(applyMove(s, { type: 'commitCard', cardId: 17 }, 'b'));
+    s = skipAbilities(s);
     expect(s.players[0].losers).toContain(5);
     expect(s.players[1].losers).toContain(17);
     expect(s.vakharcDepth).toBe(1);
@@ -161,7 +170,7 @@ describe('win conditions', () => {
         attackerId: 'a',
         abilityCursor: 'a',
         nullifiedGroups: [],
-        nullifyAll: false,
+        nullifiedPlayers: [],
         forcedWinnerId: null,
         grandBattle: false,
         log: [],
@@ -174,6 +183,7 @@ describe('win conditions', () => {
     };
     let s = expectOk(applyMove(g, { type: 'commitCard', cardId: 8 }, 'a'));
     s = expectOk(applyMove(s, { type: 'commitCard', cardId: 13 }, 'b'));
+    s = skipAbilities(s);
     expect(s.phase).toBe('finished');
     expect(s.winnerId).toBe('a');
     expect(groupVictoryCount(s.players[0])).toBe(6);
