@@ -1,35 +1,28 @@
 # Card images
 
-These are the visual assets for each Crok card, served statically by Vite at
-`/cards/<filename>` and referenced by the `image` field in
+Visual assets for each Crok card, served statically by Vite at `/cards/<filename>`
+and referenced by the `image` field in
 [`src/data/cards.json`](../../src/data/cards.json).
 
-## Why this folder is (mostly) empty
+## Status: complete
 
-The card images cannot be fetched automatically — the source sites
-(mastercrok.blogspot.com, mastercrokccg.wordpress.com) return **HTTP 403** to
-every automated request, and chat-attached images cannot be written to the repo
-by the assistant. **The image files must be added here by hand.**
+All 21 base-set images are present.
 
 ## Naming convention
 
-`NN-slug.jpg` — zero-padded set number + the card `slug` from `cards.json`:
+`NNN.jpg` — the zero-padded card `id` from `cards.json`:
 
 | File | Card |
 |---|---|
-| `01-master-crok.jpg` | Master Crok (1/21) |
-| `02-bond-crok.jpg`   | Bond Crok (2/21) |
-| `03-devil-crok.jpg`  | Devil Crok (3/21) |
-| `04-samurai-crok.jpg`| Samurai Crok (4/21) |
-| `05-angel-crok.jpg`  | Angel Crok (5/21) |
-| `06-…` … `21-…`      | pending |
+| `001.jpg` | Master Crok (1/21) |
+| `002.jpg` | Bond Crok (2/21) |
+| …         | … |
+| `021.jpg` | Sheriff Crok (21/21) |
 
-## How to add images
+## Adding more cards later
 
-1. Save each scan with the exact filename above (jpg or png — if png, update the
-   `image` path in `cards.json`).
-2. Drop the file into this `public/cards/` folder.
-3. Flip `"imagePresent": false` → `true` for that card in `cards.json`.
-4. Commit. Vite serves it at `/cards/NN-slug.jpg`; `CrokCard.tsx` renders it.
+Card data is additive: append the entry to `cards.json` (next `id`), then drop
+`NNN.jpg` here with the matching zero-padded id and set `"imagePresent": true`.
+Vite serves it at `/cards/NNN.jpg`; `CrokCard.tsx` renders it.
 
-Keep images reasonably sized (≈ 400–600px wide) so the board stays light.
+Keep new images reasonably sized so the board stays light.

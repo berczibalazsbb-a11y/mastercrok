@@ -6,45 +6,102 @@
     "year": 2001,
     "totalCards": 21,
     "knownCards": 21,
-    "statKeys": ["power", "intelligence", "reflex"],
-    "statKeysHu": { "power": "erő", "intelligence": "intelligencia", "reflex": "reflex" },
-    "notes": "Complete 21-card base set. Data entered manually from physical card scans. Image files must be added to /public/cards/ by hand (see public/cards/README.md). Master Crok group icon (arc-of-dots) is visually confirmed but name unverified — update 'ninja' slug if a canonical name exists."
+    "statKeys": [
+      "power",
+      "intelligence",
+      "reflex"
+    ],
+    "statKeysHu": {
+      "power": "erő",
+      "intelligence": "intelligencia",
+      "reflex": "reflex"
+    },
+    "notes": "Complete 21-card base set. Data entered manually from physical card scans. All card images present in /public/cards/ as NNN.jpg (zero-padded card id). Master Crok (id 1) is a unique, groupless card. Captain Crok and Karate Crok abilities use the assumptions documented in their notes (per-player stat sum; power replacement)."
   },
   "groups": {
-    "ninja":   { "name": "Ninja",   "icon": "arc-of-dots",     "confirmed": false, "cardCount": 1 },
-    "spy":     { "name": "Spy",     "icon": "revolver",         "confirmed": true,  "cardCount": 2 },
-    "devil":   { "name": "Devil",   "icon": "flaming-trident",  "confirmed": true,  "cardCount": 2 },
-    "yin-yang":{ "name": "Yin-Yang","icon": "yin-yang",         "confirmed": true,  "cardCount": 2 },
-    "angel":   { "name": "Angel",   "icon": "winged-cross",     "confirmed": true,  "cardCount": 2 },
-    "pirate":  { "name": "Pirate",  "icon": "compass-rose",     "confirmed": true,  "cardCount": 2 },
-    "jungle":  { "name": "Jungle",  "icon": "dagger",           "confirmed": true,  "cardCount": 2 },
-    "sumo":    { "name": "Sumo",    "icon": "trophy",           "confirmed": true,  "cardCount": 2 },
-    "lightning":{ "name": "Lightning","icon": "lightning-bolt", "confirmed": true,  "cardCount": 2 },
-    "flower":  { "name": "Flower",  "icon": "smiley-flower",    "confirmed": true,  "cardCount": 2 },
-    "sheriff": { "name": "Sheriff", "icon": "gold-star",        "confirmed": true,  "cardCount": 2 }
+    "spy": {
+      "name": "Spy",
+      "icon": "revolver",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "devil": {
+      "name": "Devil",
+      "icon": "flaming-trident",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "yin-yang": {
+      "name": "Yin-Yang",
+      "icon": "yin-yang",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "angel": {
+      "name": "Angel",
+      "icon": "winged-cross",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "pirate": {
+      "name": "Pirate",
+      "icon": "compass-rose",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "jungle": {
+      "name": "Jungle",
+      "icon": "dagger",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "sumo": {
+      "name": "Sumo",
+      "icon": "trophy",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "lightning": {
+      "name": "Lightning",
+      "icon": "lightning-bolt",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "flower": {
+      "name": "Flower",
+      "icon": "smiley-flower",
+      "confirmed": true,
+      "cardCount": 2
+    },
+    "sheriff": {
+      "name": "Sheriff",
+      "icon": "gold-star",
+      "confirmed": true,
+      "cardCount": 2
+    }
   },
   "abilityArchetypes": {
-    "swap-from-hand":              "Replace played card with a chosen card from hand; reopens ability loop",
-    "swap-from-deck-blind":        "Replace played card with top card of own deck without looking",
-    "force-opponent-deck-swap":    "Force a chosen opponent to replace their played card with the bottom card of their deck",
-    "change-stat-free":            "Change the declared battle stat to any of the three stats",
-    "change-stat-to-power":        "Change the declared battle stat to power specifically",
-    "immediate-nullify-all":       "Azonnal: immediately nullifies all opponents' abilities this battle",
+    "swap-from-hand": "Replace played card with a chosen card from hand; reopens ability loop",
+    "swap-from-deck-blind": "Replace played card with top card of own deck without looking",
+    "force-opponent-deck-swap": "Force a chosen opponent to replace their played card with the bottom card of their deck",
+    "change-stat-free": "Change the declared battle stat to any of the three stats",
+    "change-stat-to-power": "Change the declared battle stat to power specifically",
+    "immediate-nullify-all": "Azonnal: immediately nullifies all opponents' abilities this battle",
     "immediate-nullify-group-or-draw": "Azonnal: nullify abilities of a specific group OR draw a card (player chooses)",
-    "copy-ability":                "Use the ability of a card from another player's loser pile",
-    "recover-loser-to-hand":       "Take one of your own losing Croks back into your hand",
-    "force-extra-battle":          "Everyone adds top deck card to the battle; sum of both cards' stat values is used",
-    "force-opponent-discard":      "Target player must move a card from their hand to their loser pile",
-    "buff-next-battle":            "All your Croks gain +1 to all stats in the next battle",
-    "conditional-power-boost":     "This card gains +2 power if its intelligence is higher than all opponents'",
-    "trigger-vakharc-on-loss":     "If this card loses, the next battle starts as a Vakharc and you choose the stat",
-    "scale-with-opponents":        "All stats increase by the number of opponents; swapped Croks count as extra opponents",
-    "attacker-plus-reflex":        "Become attacker next round AND gain +2 reflex when in defender role",
-    "deficit-buff":                "Stats increase by how many more wins the chosen opponent has than you",
-    "sacrifice-power":             "Discard a card from hand to your loser pile; use that card's power stat in this battle",
-    "deck-scry":                   "Look at the top 6 cards of your deck and rearrange them in any order",
-    "winning-override-copy":       "Wins the battle if you discard from hand a copy of any other player's played Crok",
-    "winning-override-on-tie":     "Wins the battle if the stat comparison result is currently a tie"
+    "copy-ability": "Use the ability of a card from another player's loser pile",
+    "recover-loser-to-hand": "Take one of your own losing Croks back into your hand",
+    "force-extra-battle": "Everyone adds top deck card to the battle; sum of both cards' stat values is used",
+    "force-opponent-discard": "Target player must move a card from their hand to their loser pile",
+    "buff-next-battle": "All your Croks gain +1 to all stats in the next battle",
+    "conditional-power-boost": "This card gains +2 power if its intelligence is higher than all opponents'",
+    "trigger-vakharc-on-loss": "If this card loses, the next battle starts as a Vakharc and you choose the stat",
+    "scale-with-opponents": "All stats increase by the number of opponents; swapped Croks count as extra opponents",
+    "attacker-plus-reflex": "Become attacker next round AND gain +2 reflex when in defender role",
+    "deficit-buff": "Stats increase by how many more wins the chosen opponent has than you",
+    "sacrifice-power": "Discard a card from hand to your loser pile; use that card's power stat in this battle",
+    "deck-scry": "Look at the top 6 cards of your deck and rearrange them in any order",
+    "winning-override-copy": "Wins the battle if you discard from hand a copy of any other player's played Crok",
+    "winning-override-on-tie": "Wins the battle if the stat comparison result is currently a tie"
   },
   "cards": [
     {
@@ -52,9 +109,13 @@
       "edition": "1/21",
       "slug": "master-crok",
       "name": "Master Crok",
-      "group": "ninja",
-      "groupConfirmed": false,
-      "stats": { "power": 8, "intelligence": 7, "reflex": 9 },
+      "group": null,
+      "groupConfirmed": true,
+      "stats": {
+        "power": 8,
+        "intelligence": 7,
+        "reflex": 9
+      },
       "ability": {
         "name": "Váratlan csapás",
         "nameEn": "Unexpected Strike",
@@ -63,10 +124,10 @@
         "archetype": "swap-from-hand",
         "trigger": "onAbilityPhase",
         "optional": true,
-        "notes": "Cannot swap for another copy of Master Crok. Swapping reopens the ability loop."
+        "notes": "Cannot swap for another copy of Master Crok. Swapping reopens the ability loop. NOTE: Master Crok is a UNIQUE, GROUPLESS card (group: null) — it can never contribute toward a group-victory in the win condition."
       },
-      "image": "/cards/01-master-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/001.jpg",
+      "imagePresent": true
     },
     {
       "id": 2,
@@ -75,7 +136,11 @@
       "name": "Bond Crok",
       "group": "spy",
       "groupConfirmed": true,
-      "stats": { "power": 5, "intelligence": 6, "reflex": 7 },
+      "stats": {
+        "power": 5,
+        "intelligence": 6,
+        "reflex": 7
+      },
       "ability": {
         "name": "Trükkös fordulat",
         "nameEn": "Tricky Turn",
@@ -86,8 +151,8 @@
         "optional": true,
         "notes": "Can change to any stat including the already declared one (no-op). Rules text implies reactive play after opponent swaps."
       },
-      "image": "/cards/02-bond-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/002.jpg",
+      "imagePresent": true
     },
     {
       "id": 3,
@@ -96,7 +161,11 @@
       "name": "Devil Crok",
       "group": "devil",
       "groupConfirmed": true,
-      "stats": { "power": 6, "intelligence": 6, "reflex": 6 },
+      "stats": {
+        "power": 6,
+        "intelligence": 6,
+        "reflex": 6
+      },
       "ability": {
         "name": "Lélekrablás",
         "nameEn": "Soul Theft",
@@ -107,8 +176,8 @@
         "optional": true,
         "notes": "Target is ANY player's loser pile, not just the direct opponent. The borrowed ability is used in place of Devil Crok's own ability turn; counts as Devil's one use."
       },
-      "image": "/cards/03-devil-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/003.jpg",
+      "imagePresent": true
     },
     {
       "id": 4,
@@ -117,7 +186,11 @@
       "name": "Samurai Crok",
       "group": "yin-yang",
       "groupConfirmed": true,
-      "stats": { "power": 6, "intelligence": 4, "reflex": 8 },
+      "stats": {
+        "power": 6,
+        "intelligence": 4,
+        "reflex": 8
+      },
       "ability": {
         "name": "Első vágás",
         "nameEn": "First Cut",
@@ -128,8 +201,8 @@
         "optional": false,
         "notes": "Azonnal: fires immediately at reveal, out of turn order. Nullifies ALL opponents' abilities for this battle. Does not affect Samurai's own ability (already used)."
       },
-      "image": "/cards/04-samurai-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/004.jpg",
+      "imagePresent": true
     },
     {
       "id": 5,
@@ -138,7 +211,11 @@
       "name": "Angel Crok",
       "group": "angel",
       "groupConfirmed": true,
-      "stats": { "power": 3, "intelligence": 4, "reflex": 7 },
+      "stats": {
+        "power": 3,
+        "intelligence": 4,
+        "reflex": 7
+      },
       "ability": {
         "name": "Feltámasztás",
         "nameEn": "Resurrection",
@@ -149,8 +226,8 @@
         "optional": true,
         "notes": "Retrieves any card from your own loser pile back to hand. Does not affect win-condition group count (the recovered card was already in the loser pile)."
       },
-      "image": "/cards/05-angel-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/005.jpg",
+      "imagePresent": true
     },
     {
       "id": 6,
@@ -159,7 +236,11 @@
       "name": "Captain Crok",
       "group": "pirate",
       "groupConfirmed": true,
-      "stats": { "power": 5, "intelligence": 6, "reflex": 3 },
+      "stats": {
+        "power": 5,
+        "intelligence": 6,
+        "reflex": 3
+      },
       "ability": {
         "name": "Nagy ütközet",
         "nameEn": "Great Battle",
@@ -170,8 +251,8 @@
         "optional": true,
         "notes": "OPEN QUESTION: does 'sum of values' mean (a) each player sums their two cards' chosen stat, then compares totals, or (b) the sum across all cards in play? Assumed (a). Players with empty decks contribute only their played card. The extra deck card does not trigger abilities."
       },
-      "image": "/cards/06-captain-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/006.jpg",
+      "imagePresent": true
     },
     {
       "id": 7,
@@ -180,7 +261,11 @@
       "name": "Executor Crok",
       "group": "devil",
       "groupConfirmed": true,
-      "stats": { "power": 7, "intelligence": 4, "reflex": 3 },
+      "stats": {
+        "power": 7,
+        "intelligence": 4,
+        "reflex": 3
+      },
       "ability": {
         "name": "Nincs kegyelem",
         "nameEn": "No Mercy",
@@ -191,8 +276,8 @@
         "optional": true,
         "notes": "The TARGET player chooses which hand card to discard (not the Executor player). Reduces opponent's hand and may hurt their win-group count if they sacrifice a winner — but here it goes to LOSER pile from HAND, not from winner pile."
       },
-      "image": "/cards/07-executor-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/007.jpg",
+      "imagePresent": true
     },
     {
       "id": 8,
@@ -201,7 +286,11 @@
       "name": "Jungle Crok",
       "group": "jungle",
       "groupConfirmed": true,
-      "stats": { "power": 6, "intelligence": 3, "reflex": 5 },
+      "stats": {
+        "power": 6,
+        "intelligence": 3,
+        "reflex": 5
+      },
       "ability": {
         "name": "Dzsungelharc",
         "nameEn": "Jungle Battle",
@@ -212,8 +301,8 @@
         "optional": true,
         "notes": "Blind swap from own deck top. The new card's ability is available for use in the same battle (loop continues). If deck is empty, the ability cannot be used."
       },
-      "image": "/cards/08-jungle-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/008.jpg",
+      "imagePresent": true
     },
     {
       "id": 9,
@@ -222,7 +311,11 @@
       "name": "Sensei Crok",
       "group": "yin-yang",
       "groupConfirmed": true,
-      "stats": { "power": 2, "intelligence": 9, "reflex": 3 },
+      "stats": {
+        "power": 2,
+        "intelligence": 9,
+        "reflex": 3
+      },
       "ability": {
         "name": "Tanítás ereje",
         "nameEn": "Power of Teaching",
@@ -233,8 +326,8 @@
         "optional": true,
         "notes": "Persistent cross-battle buff: +1 to ALL three stats on whichever Crok you play next battle. Buff is on the PLAYER state, applied at the start of the next battle. Does not stack with multiple Sensei uses (TBD: clarify if it stacks)."
       },
-      "image": "/cards/09-sensei-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/009.jpg",
+      "imagePresent": true
     },
     {
       "id": 10,
@@ -243,7 +336,11 @@
       "name": "Sumo Crok",
       "group": "sumo",
       "groupConfirmed": true,
-      "stats": { "power": 8, "intelligence": 5, "reflex": 1 },
+      "stats": {
+        "power": 8,
+        "intelligence": 5,
+        "reflex": 1
+      },
       "ability": {
         "name": "Lehengerlés",
         "nameEn": "Steamroll",
@@ -254,8 +351,8 @@
         "optional": true,
         "notes": "Condition: Sumo's intelligence (5) must exceed ALL opponents' intelligence stats. In N-player, must beat every other played card. Boost is +2 power for this battle only."
       },
-      "image": "/cards/10-sumo-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/010.jpg",
+      "imagePresent": true
     },
     {
       "id": 11,
@@ -264,7 +361,11 @@
       "name": "Pancrator Crok",
       "group": "lightning",
       "groupConfirmed": true,
-      "stats": { "power": 9, "intelligence": 2, "reflex": 3 },
+      "stats": {
+        "power": 9,
+        "intelligence": 2,
+        "reflex": 3
+      },
       "ability": {
         "name": "Tömegverekedés",
         "nameEn": "Mass Brawl",
@@ -275,8 +376,8 @@
         "optional": false,
         "notes": "Fires after resolution if Pancrator loses. Forces the next battle to begin in Vakharc state. The Pancrator owner (not the battle winner) declares the stat for that Vakharc. Ability is automatic if conditions are met."
       },
-      "image": "/cards/11-pancrator-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/011.jpg",
+      "imagePresent": true
     },
     {
       "id": 12,
@@ -285,7 +386,11 @@
       "name": "Army Crok",
       "group": "jungle",
       "groupConfirmed": true,
-      "stats": { "power": 3, "intelligence": 4, "reflex": 4 },
+      "stats": {
+        "power": 3,
+        "intelligence": 4,
+        "reflex": 4
+      },
       "ability": {
         "name": "Sorozatlövés",
         "nameEn": "Burst Fire",
@@ -296,8 +401,8 @@
         "optional": true,
         "notes": "Base opponent count = (number of players - 1). Each card swap by any opponent during this battle adds +1 to the count. Count is locked when Army's ability resolves, not recalculated after."
       },
-      "image": "/cards/12-army-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/012.jpg",
+      "imagePresent": true
     },
     {
       "id": 13,
@@ -306,7 +411,11 @@
       "name": "Boy Crok",
       "group": "flower",
       "groupConfirmed": true,
-      "stats": { "power": 1, "intelligence": 4, "reflex": 6 },
+      "stats": {
+        "power": 1,
+        "intelligence": 4,
+        "reflex": 6
+      },
       "ability": {
         "name": "Pimasz csínytevés",
         "nameEn": "Cheeky Mischief",
@@ -317,8 +426,8 @@
         "optional": true,
         "notes": "Dual effect: (1) sets you as attacker next round regardless of who wins, (2) +2 reflex buff applies THIS battle if you are a defender. If you are already the attacker, effect (2) does not apply."
       },
-      "image": "/cards/13-boy-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/013.jpg",
+      "imagePresent": true
     },
     {
       "id": 14,
@@ -327,7 +436,11 @@
       "name": "Cave Crok",
       "group": "lightning",
       "groupConfirmed": true,
-      "stats": { "power": 7, "intelligence": 1, "reflex": 3 },
+      "stats": {
+        "power": 7,
+        "intelligence": 1,
+        "reflex": 3
+      },
       "ability": {
         "name": "Dühöngés",
         "nameEn": "Frenzy",
@@ -338,8 +451,8 @@
         "optional": true,
         "notes": "Cave chooses ONE opponent to compare against. Buff = max(0, opponent.winCount - own.winCount). If you are equal or ahead, buff is 0. Catch-up mechanic — strongest when behind."
       },
-      "image": "/cards/14-cave-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/014.jpg",
+      "imagePresent": true
     },
     {
       "id": 15,
@@ -348,7 +461,11 @@
       "name": "Funny Crok",
       "group": "flower",
       "groupConfirmed": true,
-      "stats": { "power": 1, "intelligence": 6, "reflex": 4 },
+      "stats": {
+        "power": 1,
+        "intelligence": 6,
+        "reflex": 4
+      },
       "ability": {
         "name": "Van másik!",
         "nameEn": "There's Another One!",
@@ -359,8 +476,8 @@
         "optional": true,
         "notes": "Forces the bottom (not top) of target's deck — high disruption, unknown card. If the target's deck is empty, no swap occurs. The new card's ability is available in the continuing loop."
       },
-      "image": "/cards/15-funny-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/015.jpg",
+      "imagePresent": true
     },
     {
       "id": 16,
@@ -369,7 +486,11 @@
       "name": "Gladiator Crok",
       "group": "pirate",
       "groupConfirmed": true,
-      "stats": { "power": 5, "intelligence": 1, "reflex": 5 },
+      "stats": {
+        "power": 5,
+        "intelligence": 1,
+        "reflex": 5
+      },
       "ability": {
         "name": "Pajzsharc",
         "nameEn": "Shield Battle",
@@ -380,8 +501,8 @@
         "optional": true,
         "notes": "Restricted version of Bond's change-stat — can ONLY switch to power, not a free choice. Useful to guarantee a power-type battle."
       },
-      "image": "/cards/16-gladiator-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/016.jpg",
+      "imagePresent": true
     },
     {
       "id": 17,
@@ -390,7 +511,11 @@
       "name": "Indian Crok",
       "group": "sheriff",
       "groupConfirmed": true,
-      "stats": { "power": 3, "intelligence": 5, "reflex": 3 },
+      "stats": {
+        "power": 3,
+        "intelligence": 5,
+        "reflex": 3
+      },
       "ability": {
         "name": "Felderítés",
         "nameEn": "Scouting",
@@ -401,8 +526,8 @@
         "optional": true,
         "notes": "Private information action: only the Indian owner sees the cards. Allows setting up future draws. If deck has fewer than 6 cards, look at all remaining cards."
       },
-      "image": "/cards/17-indian-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/017.jpg",
+      "imagePresent": true
     },
     {
       "id": 18,
@@ -411,7 +536,11 @@
       "name": "Karate Crok",
       "group": "sumo",
       "groupConfirmed": true,
-      "stats": { "power": 2, "intelligence": 3, "reflex": 6 },
+      "stats": {
+        "power": 2,
+        "intelligence": 3,
+        "reflex": 6
+      },
       "ability": {
         "name": "Tigriskarom",
         "nameEn": "Tiger Claw",
@@ -422,8 +551,8 @@
         "optional": true,
         "notes": "OPEN QUESTION: does the sacrificed card's power REPLACE Karate's own power (2) or ADD to it? Assumed replace — 'use its power' implies substitution. Cost: the sacrificed card goes to loser pile permanently."
       },
-      "image": "/cards/18-karate-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/018.jpg",
+      "imagePresent": true
     },
     {
       "id": 19,
@@ -432,7 +561,11 @@
       "name": "Police Crok",
       "group": "spy",
       "groupConfirmed": true,
-      "stats": { "power": 4, "intelligence": 3, "reflex": 4 },
+      "stats": {
+        "power": 4,
+        "intelligence": 3,
+        "reflex": 4
+      },
       "ability": {
         "name": "Letartóztatás",
         "nameEn": "Arrest",
@@ -443,8 +576,8 @@
         "optional": true,
         "notes": "Winning override: stat comparison is skipped entirely; Police wins. Requires holding a card with the SAME name as any other player's currently-played Crok. The copy goes to Police owner's loser pile as cost. Named in the official rules as the 'Police' winning ability."
       },
-      "image": "/cards/19-police-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/019.jpg",
+      "imagePresent": true
     },
     {
       "id": 20,
@@ -453,7 +586,11 @@
       "name": "Priest Crok",
       "group": "angel",
       "groupConfirmed": true,
-      "stats": { "power": 2, "intelligence": 7, "reflex": 2 },
+      "stats": {
+        "power": 2,
+        "intelligence": 7,
+        "reflex": 2
+      },
       "ability": {
         "name": "Ima",
         "nameEn": "Prayer",
@@ -464,8 +601,8 @@
         "optional": false,
         "notes": "Azonnal: fires at reveal, out of turn order. Choice between two effects: (A) nullify devil-group abilities (Devil Crok, Executor Crok) for this battle, or (B) draw 1 card from deck. If no devil-group Croks are in play, option A is a no-op but still valid."
       },
-      "image": "/cards/20-priest-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/020.jpg",
+      "imagePresent": true
     },
     {
       "id": 21,
@@ -474,7 +611,11 @@
       "name": "Sheriff Crok",
       "group": "sheriff",
       "groupConfirmed": true,
-      "stats": { "power": 3, "intelligence": 3, "reflex": 5 },
+      "stats": {
+        "power": 3,
+        "intelligence": 3,
+        "reflex": 5
+      },
       "ability": {
         "name": "Pisztolypárbaj",
         "nameEn": "Pistol Duel",
@@ -485,8 +626,8 @@
         "optional": true,
         "notes": "Player uses this during the ability phase after seeing all revealed cards. If the chosen stat is tied between all players, Sheriff wins instead of Vakharc triggering. Named in the official rules as a 'Sheriff' winning ability."
       },
-      "image": "/cards/21-sheriff-crok.jpg",
-      "imagePresent": false
+      "image": "/cards/021.jpg",
+      "imagePresent": true
     }
   ]
 }
