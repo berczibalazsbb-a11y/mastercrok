@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mastercrok/cards.schema.json",
+  "title": "Master Crok card database",
+  "type": "object",
+  "required": ["meta", "groups", "cards"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["set", "totalCards", "statKeys"],
+      "properties": {
+        "set": { "type": "string" },
+        "publisher": { "type": "string" },
+        "year": { "type": "integer" },
+        "totalCards": { "type": "integer" },
+        "knownCards": { "type": "integer" },
+        "statKeys": {
+          "type": "array",
+          "items": { "enum": ["power", "intelligence", "reflex"] }
+        },
+        "statKeysHu": { "type": "object" },
+        "notes": { "type": "string" }
+      }
+    },
+    "groups": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "icon"],
+        "properties": {
+          "name": { "type": "string" },
+          "icon": { "type": "string" },
+          "confirmed": { "type": "boolean" }
+        }
+      }
+    },
+    "abilityArchetypes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "slug", "name", "group", "stats", "ability", "image"],
+        "properties": {
+          "id": { "type": "integer", "minimum": 1, "maximum": 21 },
+          "edition": { "type": "string", "description": "Printed set number, e.g. 4/21" },
+          "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "name": { "type": "string" },
+          "group": { "type": "string", "description": "Key into the groups map" },
+          "groupConfirmed": { "type": "boolean" },
+          "stats": {
+            "type": "object",
+            "required": ["power", "intelligence", "reflex"],
+            "properties": {
+              "power": { "type": "integer", "minimum": 0 },
+              "intelligence": { "type": "integer", "minimum": 0 },
+              "reflex": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "ability": {
+            "type": "object",
+            "required": ["name", "textHu", "archetype", "trigger"],
+            "properties": {
+              "name": { "type": "string", "description": "Hungarian ability name" },
+              "nameEn": { "type": "string" },
+              "textHu": { "type": "string" },
+              "textEn": { "type": "string" },
+              "archetype": {
+                "enum": [
+                  "swap-from-hand",
+                  "change-stat",
+                  "immediate-nullify",
+                  "copy-ability",
+                  "recover-card",
+                  "winning-override"
+                ]
+              },
+              "trigger": {
+                "enum": [
+                  "onBattleStart",
+                  "onReveal",
+                  "onAbilityPhase",
+                  "onResolve",
+                  "onWinningOverride",
+                  "afterBattle"
+                ]
+              },
+              "optional": { "type": "boolean" }
+            }
+          },
+          "image": { "type": "string", "description": "Static path under /public" },
+          "imagePresent": { "type": "boolean", "description": "Whether the image file has been added yet" }
+        }
+      }
+    }
+  }
+}

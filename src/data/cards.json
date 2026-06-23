@@ -1,0 +1,130 @@
+{
+  "$schema": "./cards.schema.json",
+  "meta": {
+    "set": "Master Crok",
+    "publisher": "Chio",
+    "year": 2001,
+    "totalCards": 21,
+    "knownCards": 5,
+    "statKeys": ["power", "intelligence", "reflex"],
+    "statKeysHu": { "power": "erő", "intelligence": "intelligencia", "reflex": "reflex" },
+    "notes": "Card data entered manually from physical card scans; source websites 403 all automated fetches. Cards 6-21 are pending. Image files must be added to /public/cards/ by hand (see public/cards/README.md)."
+  },
+  "groups": {
+    "spy": { "name": "Spy", "icon": "revolver", "confirmed": true },
+    "devil": { "name": "Devil", "icon": "flaming-trident", "confirmed": true },
+    "yin-yang": { "name": "Yin-Yang", "icon": "yin-yang", "confirmed": true },
+    "angel": { "name": "Angel", "icon": "winged-cross", "confirmed": true },
+    "unknown-dots": { "name": "Unknown (arc of dots)", "icon": "arc-of-dots", "confirmed": false }
+  },
+  "abilityArchetypes": [
+    "swap-from-hand",
+    "change-stat",
+    "immediate-nullify",
+    "copy-ability",
+    "recover-card",
+    "winning-override"
+  ],
+  "cards": [
+    {
+      "id": 1,
+      "edition": "1/21",
+      "slug": "master-crok",
+      "name": "Master Crok",
+      "group": "unknown-dots",
+      "groupConfirmed": false,
+      "stats": { "power": 8, "intelligence": 7, "reflex": 9 },
+      "ability": {
+        "name": "Váratlan csapás",
+        "nameEn": "Unexpected Strike",
+        "textHu": "Kicserélheted egy másik, a kezedben levő Crokra, ha az nem Master Crok.",
+        "textEn": "You may swap this for another Crok in your hand, as long as it is not Master Crok.",
+        "archetype": "swap-from-hand",
+        "trigger": "onAbilityPhase",
+        "optional": true
+      },
+      "image": "/cards/01-master-crok.jpg",
+      "imagePresent": false
+    },
+    {
+      "id": 2,
+      "edition": "2/21",
+      "slug": "bond-crok",
+      "name": "Bond Crok",
+      "group": "spy",
+      "groupConfirmed": true,
+      "stats": { "power": 5, "intelligence": 6, "reflex": 7 },
+      "ability": {
+        "name": "Trükkös fordulat",
+        "nameEn": "Tricky Turn",
+        "textHu": "Megváltoztathatod a harc típusát: erő, intelligencia vagy reflex.",
+        "textEn": "You may change the battle type: power, intelligence or reflex.",
+        "archetype": "change-stat",
+        "trigger": "onAbilityPhase",
+        "optional": true
+      },
+      "image": "/cards/02-bond-crok.jpg",
+      "imagePresent": false
+    },
+    {
+      "id": 3,
+      "edition": "3/21",
+      "slug": "devil-crok",
+      "name": "Devil Crok",
+      "group": "devil",
+      "groupConfirmed": true,
+      "stats": { "power": 6, "intelligence": 6, "reflex": 6 },
+      "ability": {
+        "name": "Lélekrablás",
+        "nameEn": "Soul Theft",
+        "textHu": "Használhatja egy másik játékos, egyik vesztes Crokjának képességét.",
+        "textEn": "May use the ability of one of another player's losing Croks.",
+        "archetype": "copy-ability",
+        "trigger": "onAbilityPhase",
+        "optional": true
+      },
+      "image": "/cards/03-devil-crok.jpg",
+      "imagePresent": false
+    },
+    {
+      "id": 4,
+      "edition": "4/21",
+      "slug": "samurai-crok",
+      "name": "Samurai Crok",
+      "group": "yin-yang",
+      "groupConfirmed": true,
+      "stats": { "power": 6, "intelligence": 4, "reflex": 8 },
+      "ability": {
+        "name": "Első vágás",
+        "nameEn": "First Cut",
+        "textHu": "Azonnal hatástalanítja az ellenfelek képességeit.",
+        "textEn": "Immediately nullifies the opponents' abilities.",
+        "archetype": "immediate-nullify",
+        "trigger": "onReveal",
+        "optional": false
+      },
+      "image": "/cards/04-samurai-crok.jpg",
+      "imagePresent": false
+    },
+    {
+      "id": 5,
+      "edition": "5/21",
+      "slug": "angel-crok",
+      "name": "Angel Crok",
+      "group": "angel",
+      "groupConfirmed": true,
+      "stats": { "power": 3, "intelligence": 4, "reflex": 7 },
+      "ability": {
+        "name": "Feltámasztás",
+        "nameEn": "Resurrection",
+        "textHu": "Visszaveheted a kezedbe egy vesztes Crokodat.",
+        "textEn": "You may take one of your losing Croks back into your hand.",
+        "archetype": "recover-card",
+        "trigger": "onAbilityPhase",
+        "optional": true
+      },
+      "image": "/cards/05-angel-crok.jpg",
+      "imagePresent": false
+    }
+  ]
+}

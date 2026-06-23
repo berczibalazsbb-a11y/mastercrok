@@ -113,15 +113,20 @@ The physical set is **21 cards** (numbered 1/21–21/21, Chio © 2001). The live
 
 | # | Name | Group | Power | Int | Reflex | Ability name | Ability text (HU) |
 |---|---|---|---|---|---|---|---|
-| 1 | Master Crok | ninja (dots) | 8 | 7 | 9 | Váratlan csapás | Kicserélheted egy másik, a kezedben levő Crokra, ha az nem Master Crok. |
+| 1 | Master Crok | unknown-dots (arc of dots) | 8 | 7 | 9 | Váratlan csapás | Kicserélheted egy másik, a kezedben levő Crokra, ha az nem Master Crok. |
 | 2 | Bond Crok | spy (revolver) | 5 | 6 | 7 | Trükkös fordulat | Megváltoztathatod a harc típusát: erő, intelligencia vagy reflex. |
 | 3 | Devil Crok | devil (trident) | 6 | 6 | 6 | Lélekrablás | Használhatja egy másik játékos, egyik vesztes Crokjának képességét. |
-| 4–21 | **UNKNOWN** — paste from the blog/cards page | | | | | | |
+| 4 | Samurai Crok | yin-yang | 6 | 4 | 8 | Első vágás | Azonnal hatástalanítja az ellenfelek képességeit. (immediate / nullify) |
+| 5 | Angel Crok | angel (winged cross) | 3 | 4 | 7 | Feltámasztás | Visszaveheted a kezedbe egy vesztes Crokodat. (recover a losing Crok to hand) |
+| 6–21 | **UNKNOWN** — pending scans | | | | | | |
 
-Named in rules text (group/stats unknown): **Samurai** (`Azonnal` ability), **Priest** (`Azonnal` ability), **Jungle** (swap ability), **Police** (winning-override ability), **Sheriff** (winning-override ability).
+Named in rules text (still unscanned): **Priest** (`Azonnal` ability), **Jungle** (swap ability), **Police** (winning-override ability), **Sheriff** (winning-override ability). (Samurai is now card #4.)
 
-### How to add cards
-Edit `src/data/cards.ts` — the file exports a `CrokCard[]` array. Each entry must conform to the `CrokCard` interface in `src/types/card.ts`. Group values should be the slug of the group icon name (e.g. `"ninja"`, `"spy"`, `"devil"`).
+### Canonical card data lives in JSON
+The source of truth is **`src/data/cards.json`** (validated by `src/data/cards.schema.json`). `src/data/cards.ts` will import and type-narrow this JSON into `CrokCard[]`. To add a card, append an entry to `cards.json` following the schema, then add its image (see `public/cards/README.md`). Group values are slugs keyed into the `groups` map (e.g. `"spy"`, `"devil"`, `"angel"`, `"yin-yang"`).
+
+### Card image assets
+Images are static files in **`public/cards/`** named `NN-slug.jpg`, referenced by each card's `image` field and rendered by `CrokCard.tsx`. They must be added manually — the source sites 403 automated fetches and chat-attached images can't be written to the repo by the assistant.
 
 ## Ability system architecture
 
