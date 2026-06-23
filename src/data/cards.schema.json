@@ -70,11 +70,26 @@
               "archetype": {
                 "enum": [
                   "swap-from-hand",
-                  "change-stat",
-                  "immediate-nullify",
+                  "swap-from-deck-blind",
+                  "force-opponent-deck-swap",
+                  "change-stat-free",
+                  "change-stat-to-power",
+                  "immediate-nullify-all",
+                  "immediate-nullify-group-or-draw",
                   "copy-ability",
-                  "recover-card",
-                  "winning-override"
+                  "recover-loser-to-hand",
+                  "force-extra-battle",
+                  "force-opponent-discard",
+                  "buff-next-battle",
+                  "conditional-power-boost",
+                  "trigger-vakharc-on-loss",
+                  "scale-with-opponents",
+                  "attacker-plus-reflex",
+                  "deficit-buff",
+                  "sacrifice-power",
+                  "deck-scry",
+                  "winning-override-copy",
+                  "winning-override-on-tie"
                 ]
               },
               "trigger": {
