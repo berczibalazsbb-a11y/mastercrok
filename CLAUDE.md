@@ -27,7 +27,14 @@ mastercrok/
 ├── postcss.config.js
 ├── tsconfig.json
 ├── .env.example
-├── _redirects                        # Cloudflare Pages SPA fallback
+│
+├── .github/
+│   └── workflows/
+│       └── deploy.yml                # Cloudflare Pages CD on push to main
+│
+├── public/
+│   ├── _redirects                    # Cloudflare Pages SPA fallback (/* → /index.html 200)
+│   └── cards/                        # 001.jpg … 021.jpg
 │
 ├── supabase/
 │   ├── config.toml
@@ -42,27 +49,35 @@ mastercrok/
 └── src/
     ├── main.tsx
     ├── App.tsx
+    ├── vite-env.d.ts
     ├── lib/
-    │   └── supabaseClient.ts
+    │   ├── supabaseClient.ts
+    │   ├── auth.ts                   # signUp / signIn / signOut; username → email bridge
+    │   └── matches.ts                # createMatch / joinMatch / startMatch; DEFAULT_DECK
     ├── types/
-    │   ├── card.ts                   # CrokCard, StatKey, Group, Ability
-    │   └── game.ts                   # PlayerState, GameState, Move, DuelResult
+    │   ├── card.ts                   # CrokCard, StatKey, Group, Ability, AbilityArchetype
+    │   └── game.ts                   # PlayerState, GameState, Move, BattleState, DuelResult
     ├── data/
-    │   └── cards.ts                  # full typed card DB (see Card Data section)
+    │   ├── cards.json                # canonical 21-card DB (source of truth)
+    │   ├── cards.schema.json         # JSON schema for cards.json
+    │   └── cards.ts                  # typed re-export; getCard(), CARDS[]
     ├── engine/
+    │   ├── rng.ts                    # mulberry32 PRNG + Fisher-Yates shuffle
     │   ├── deck.ts                   # validateDeck()
-    │   ├── duel.ts                   # resolveDuel() pure function
-    │   ├── abilities.ts              # ability registry + hook system
-    │   └── winCondition.ts          # checkWinCondition()
+    │   ├── duel.ts                   # baseValue(), compareValues(), resolveBattle()
+    │   ├── abilities.ts              # canUseAbility, applyAbility, applyImmediateAbilities
+    │   ├── state.ts                  # createGame(), applyMove() — single source of truth
+    │   ├── winCondition.ts           # groupVictoryCount(), checkWinCondition()
+    │   └── selectors.ts              # pendingActors(), isMyTurn(), phaseHint()
     ├── hooks/
+    │   ├── useAuth.ts
     │   └── useMatch.ts               # Realtime game-engine hook
     ├── components/
     │   ├── CrokCard.tsx
     │   ├── GameBoard.tsx
     │   ├── Hand.tsx
     │   ├── DuelZone.tsx
-    │   ├── WinPile.tsx
-    │   └── StatBadge.tsx
+    │   └── WinPile.tsx
     └── pages/
         ├── Lobby.tsx
         └── Match.tsx
@@ -107,7 +122,7 @@ mastercrok/
 
 ## Card data
 
-The physical set is **21 cards** (numbered 1/21–21/21, Chio © 2001). All card data has been entered manually from scans (source sites 403 automated fetches). **The complete data set is committed** in `src/data/cards.json` and all 21 images are present in `public/cards/`.
+The physical set is **21 cards** (numbered 1/21–21/21, Chio © 2001). All card data has been entered manually from scans. **The complete data set is committed** in `src/data/cards.json` and all 21 images are present in `public/cards/`.
 
 ### Known cards (all 21 — source of truth is `src/data/cards.json`)
 
@@ -119,7 +134,7 @@ The physical set is **21 cards** (numbered 1/21–21/21, Chio © 2001). All card
 | 4 | Samurai Crok | yin-yang | 6 | 4 | 8 | Első vágás | Azonnal hatástalanítja az ellenfelek képességeit. (immediate / nullify) |
 | 5 | Angel Crok | angel (winged cross) | 3 | 4 | 7 | Feltámasztás | Visszaveheted a kezedbe egy vesztes Crokodat. |
 | 6 | Captain Crok | pirate (compass rose) | 5 | 6 | 3 | Nagy ütközet | Everyone adds top-deck card to battle; sum of stat values is used. |
-| 7 | Executor Crok | devil (trident) | 7 | 4 | 3 | Nincs kegyelem | Target player moves a hand card to their loser pile. |
+| 7 | Executor Crok | devil (trident) | 7 | 4 | 3 | Nincs kegyelem | **Target player chooses** a hand card to send to their loser pile. |
 | 8 | Jungle Crok | jungle (dagger) | 6 | 3 | 5 | Dzsungelharc | Swap played card for top of own deck, blind. |
 | 9 | Sensei Crok | yin-yang | 2 | 9 | 3 | Tanítás ereje | All your Croks +1 all stats in the NEXT battle. |
 | 10 | Sumo Crok | sumo (trophy) | 8 | 5 | 1 | Lehengerlés | +2 power if intelligence beats all opponents'. |
@@ -138,7 +153,7 @@ The physical set is **21 cards** (numbered 1/21–21/21, Chio © 2001). All card
 **10 groups**, each with exactly 2 cards: spy · devil · yin-yang · angel · pirate · jungle · sumo · lightning · flower · sheriff. **Master Crok is unique and groupless** (`group: null`) — it can never contribute toward a group-victory.
 
 ### Canonical card data lives in JSON
-The source of truth is **`src/data/cards.json`** (validated by `src/data/cards.schema.json`). `src/data/cards.ts` will import and type-narrow this JSON into `CrokCard[]`. To add a card, append an entry to `cards.json` following the schema, then add its image. Group values are slugs keyed into the `groups` map (or `null` for a unique groupless card).
+The source of truth is **`src/data/cards.json`** (validated by `src/data/cards.schema.json`). `src/data/cards.ts` imports and type-narrows this JSON into `CrokCard[]`. To add a card, append an entry to `cards.json` following the schema, then add its image. Group values are slugs keyed into the `groups` map (or `null` for a unique groupless card).
 
 ### Card image assets
 All 21 images are committed in **`public/cards/`** named `NNN.jpg` (zero-padded card id, e.g. `001.jpg` = Master Crok, `021.jpg` = Sheriff Crok), referenced by each card's `image` field and rendered by `CrokCard.tsx`.
@@ -146,47 +161,45 @@ All 21 images are committed in **`public/cards/`** named `NNN.jpg` (zero-padded 
 ### Resolved ability ambiguities (per owner decision)
 - **Captain Crok (`force-extra-battle`):** each player sums their own two cards' value in the declared stat (played card + revealed top-deck card); totals are compared. Players with empty decks contribute only their played card.
 - **Karate Crok (`sacrifice-power`):** the sacrificed hand card's power **replaces** Karate's own power (not additive) for this battle.
+- **Executor Crok (`force-opponent-discard`):** the **targeted player** chooses which of their hand cards to discard (not the Executor owner). Implemented via `pendingVictimDiscard` on `BattleState` and the `chooseDiscard` move.
 
-## Ability system architecture
+## Ability system
 
-Abilities are registered in `src/engine/abilities.ts` as handlers keyed by a stable `abilityId`. The engine exposes hooks at these phases:
+Abilities are implemented in `src/engine/abilities.ts`. The engine has three entry points consumed by `state.ts`:
+- `canUseAbility(state, playerId)` — whether the player's committed card has a usable loop ability right now
+- `applyImmediateAbilities(state)` — fires `immediate-*` abilities at reveal, out of loop order (Samurai, Priest)
+- `applyAbility(state, playerId, payload)` — applies the player's loop ability; called from the `useAbility` move
 
-```
-onBattleStart        → before stat declaration
-onReveal             → after all Croks are revealed (immediate abilities fire here)
-onAbilityPhase       → player's turn in the ability loop (conditional abilities)
-onResolve            → before stat comparison (stat-override abilities)
-onWinningOverride    → replaces stat comparison entirely (Police, Sheriff)
-afterBattle          → cleanup / reserve resolution
-```
+And one entry point consumed by `duel.ts`:
+- `effectiveValue(base, state, playerId, stat)` — adds `battleMods` on top of the base stat value
 
-### Known ability archetypes
+### Ability archetypes
 
-| Archetype | Examples | Notes |
+| Archetype | Card | Notes |
 |---|---|---|
-| `swap-from-hand` | Master | Replace played card with hand card; reopens ability loop |
-| `swap-from-deck-blind` | Jungle | Replace played card with top of own deck unseen |
-| `force-opponent-deck-swap` | Funny | Force opponent to swap their card for bottom of their deck |
+| `swap-from-hand` | Master | Replace committed card with a hand card |
+| `swap-from-deck-blind` | Jungle | Replace committed card with top of own deck |
+| `force-opponent-deck-swap` | Funny | Force an opponent to swap their card for the bottom of their deck |
 | `change-stat-free` | Bond | Change declared stat to any of the three |
 | `change-stat-to-power` | Gladiator | Force stat to power specifically |
-| `immediate-nullify-all` | Samurai | `onReveal`: nullify ALL opponents' abilities |
-| `immediate-nullify-group-or-draw` | Priest | `onReveal`: nullify devil-group abilities OR draw a card |
-| `copy-ability` | Devil | Borrow a card's ability from any player's loser pile |
-| `recover-loser-to-hand` | Angel | Return a card from your own loser pile to hand |
-| `force-extra-battle` | Captain | Add top-deck card to battle; use summed stat values |
-| `force-opponent-discard` | Executor | Target player sends a hand card to their loser pile |
-| `buff-next-battle` | Sensei | +1 all stats on your next battle's Crok |
-| `conditional-power-boost` | Sumo | +2 power if intelligence beats all opponents' |
-| `trigger-vakharc-on-loss` | Pancrator | If this loses → next battle is forced Vakharc, you pick stat |
-| `scale-with-opponents` | Army | All stats +N per opponent (swaps count) |
-| `attacker-plus-reflex` | Boy | Become attacker next round; +2 reflex when defending |
-| `deficit-buff` | Cave | All stats +N where N = opponent wins minus your wins |
-| `sacrifice-power` | Karate | Discard hand card; use its power stat this battle |
-| `deck-scry` | Indian | See and reorder top 6 deck cards |
-| `winning-override-copy` | Police | Win by discarding a copy of an opponent's played card |
-| `winning-override-on-tie` | Sheriff | Win if the stat result is currently a tie |
+| `immediate-nullify-all` | Samurai | At reveal: nullify ALL opponents' abilities this battle |
+| `immediate-nullify-group-or-draw` | Priest | At reveal: nullify devil-group abilities, or draw 1 card |
+| `copy-ability` | Devil | Borrow a loop ability from any player's loser pile |
+| `recover-loser-to-hand` | Angel | Return a chosen card from own loser pile to hand |
+| `force-extra-battle` | Captain | Reveal top-deck card; use summed stat values this battle |
+| `force-opponent-discard` | Executor | **Victim chooses** which hand card to discard to their loser pile |
+| `buff-next-battle` | Sensei | +1 all stats on own Crok in the next battle |
+| `conditional-power-boost` | Sumo | +2 power if own intelligence beats all opponents' |
+| `trigger-vakharc-on-loss` | Pancrator | If this card loses → next battle starts as Vakharc |
+| `scale-with-opponents` | Army | +N to all stats, N = number of opponents with committed cards |
+| `attacker-plus-reflex` | Boy | Become attacker next round; +2 reflex when defending this battle |
+| `deficit-buff` | Cave | +N all stats, N = (chosen opponent wins) − (own wins) |
+| `sacrifice-power` | Karate | Discard a hand card; its power stat replaces Karate's power |
+| `deck-scry` | Indian | View and freely reorder the top 6 cards of own deck |
+| `winning-override-copy` | Police | Win if you discard a copy of an opponent's committed card |
+| `winning-override-on-tie` | Sheriff | Win if the current stat result is a tie |
 
-## Database schema (planned)
+## Database schema
 
 ### `profiles`
 ```sql
@@ -205,8 +218,10 @@ status match_status         -- 'waiting' | 'active' | 'finished'
 attacker_index int          -- current attacker (index into players[])
 state jsonb                 -- full GameState blob
 winner_id uuid
+invite_code text UNIQUE
+host_id uuid
 created_at timestamptz
-updated_at timestamptz
+updated_at timestamptz      -- auto-updated by trigger; used as stale-write guard
 ```
 
 RLS: only players in the `players` array may read or update their own match.
@@ -215,9 +230,13 @@ RLS: only players in the `players` array may read or update their own match.
 - Anyone can read profiles (for lobby display).
 - Users may only update their own profile.
 
+## Auth
+
+Username/password login. Supabase Auth doesn't support username-only sign-up natively, so usernames are mapped to synthetic emails (`username@crok.local`) by `src/lib/auth.ts`. Email confirmation is disabled in the Supabase project settings.
+
 ## Move validation
 
-Moves are validated server-side in the `play-move` Edge Function to prevent cheating on the face-down commit step. The client sends a **move action** (not raw state); the function validates, advances state, and writes back to `matches.state`. Realtime triggers push the new state to all players.
+Moves are validated server-side in the `play-move` Edge Function. The client sends a **move action** (not raw state); the function validates, advances state, and writes back to `matches.state`. Realtime triggers push the new state to all players.
 
 ## Environment variables
 
@@ -228,153 +247,153 @@ VITE_SUPABASE_ANON_KEY=
 
 Set in `.env.local` for development (gitignored). Set as Cloudflare Pages environment variables for production.
 
+## Cloudflare Pages deployment
+
+Build command: `npm run build`  
+Output directory: `dist`  
+`public/_redirects` contains `/* /index.html 200` for SPA routing.
+
+**Manual deploy:**
+```bash
+export CLOUDFLARE_API_TOKEN=<token>
+export CLOUDFLARE_ACCOUNT_ID=<account_id>
+npm run build
+npx wrangler pages deploy dist --project-name mastercrok --branch main
+```
+
+**CI deploy:** `.github/workflows/deploy.yml` fires on push to `main` using the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets set in the GitHub repository.
+
+Required Cloudflare API token scopes: `Cloudflare Pages: Edit` + `Account: Read`.
+
 ## Locked decisions
 
 | Topic | Decision |
 |---|---|
 | Player count | **N-player** (min 2), clockwise turn order |
-| Auth | Supabase Auth, **username + password** |
+| Auth | Supabase Auth, **username + password** (email synthesised as `username@crok.local`) |
 | Matchmaking | **Invite link** (host creates match → shareable link/code → others join) |
 | Integrity | **Server-authoritative**: clients send move *actions*; the `play-move` Edge Function validates and advances state |
 | Card data | Complete — `src/data/cards.json` (21 cards) + images in `public/cards/` |
 | Master Crok | Unique, **groupless** — never counts toward group-victory |
 | Captain Crok | Per-player sum of own two cards in declared stat; compare totals |
 | Karate Crok | Sacrificed card's power **replaces** Karate's power |
+| Executor Crok | **Victim chooses** which hand card to discard (two-step: owner picks target → victim picks card via `chooseDiscard` move) |
+| Default deck | 1 copy of each of the 21 cards (`DEFAULT_DECK = [1…21]`) — no custom deck builder in MVP |
+| Hidden info | Single JSONB blob accepted for MVP (trusted friends); post-MVP: per-player redacted views |
 
 ---
 
-# Implementation plan
+# Implementation status
 
-> **Status: Phases 0–7 implemented.** Engine has 22 passing Vitest tests; `tsc`
-> and `vite build` are green. Remaining work is operational (provision a real
-> Supabase project + deploy) and the post-MVP backlog below.
+> **All phases complete. 27 Vitest engine tests pass; `tsc` and `vite build` are green.**
 
-Phased so the game is **playable end-to-end as early as possible**, then deepened. Each phase ends in a committable, verifiable state. The pure engine is the spine: it has zero Supabase/React imports and is fully unit-testable in isolation, then reused identically on the client (optimistic preview) and in the Edge Function (authority).
+## Phase 0 — Project skeleton ✅
+Vite + React + TS scaffold, Tailwind + PostCSS, Vitest, `supabaseClient.ts`, `.env.example`, `public/_redirects`.
 
-## Phase 0 — Project skeleton
-**Goal:** `npm run dev` serves a blank Tailwind app; `npm test` runs.
-- Vite + React + TS scaffold; `package.json`, `tsconfig.json`, `vite.config.ts`.
-- Tailwind + PostCSS config; base styles.
-- Vitest + setup for engine unit tests.
-- `src/lib/supabaseClient.ts` reading `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`; `.env.example`.
-- `_redirects` for Cloudflare SPA fallback.
-- **Verify:** dev server boots, empty test suite green.
+## Phase 1 — Types & card data binding ✅
+`src/types/card.ts`, `src/types/game.ts`, `src/data/cards.json` (21 cards), `src/data/cards.ts`. All 21 cards load; ids 1–21 unique; every group and archetype is registered (verified by test).
 
-## Phase 1 — Types & card data binding
-**Goal:** strongly-typed access to the card DB.
-- `src/types/card.ts`: `StatKey` (`'power'|'intelligence'|'reflex'`), `GroupSlug` (union of the 10 group keys), `Ability` (name, nameEn, textHu, textEn, `archetype`, `trigger`, `optional`), `CrokCard` (`group: GroupSlug | null`).
-- `src/types/game.ts`: `PlayerState`, `GameState`, `Move`, `BattleState`, `DuelResult`, `Phase` (see Data model below).
-- `src/data/cards.ts`: import `cards.json`, validate shape at module load (dev-time assert), export `CARDS: CrokCard[]` and `cardById` / `cardBySlug` maps.
-- **Verify:** a test asserts all 21 cards load, ids 1–21 unique, every `group` is a known slug or null, every `archetype` is registered.
+## Phase 2 — Pure engine ✅
+`rng.ts` (mulberry32 + Fisher-Yates), `deck.ts` (validateDeck), `state.ts` (createGame + applyMove), `duel.ts` (baseValue + compareValues), `winCondition.ts`.
+Full battle loop: draw → declare → commit → reveal → ability → resolve → winner/loser piles → tie → Vakharc (recursive) → next attacker.
 
-## Phase 2 — Pure engine (no abilities yet)
-**Goal:** a full game playable with **vanilla stat comparison only** (abilities stubbed as no-ops), driven entirely by `applyMove(state, move)`.
-- `src/engine/deck.ts`: `validateDeck(cards)` → min 10, copy limit `floor(size/10)` per **named card**; `shuffle(deck, seed)` (seeded PRNG so server & client agree).
-- `src/engine/state.ts`: `createGame(players, decks, seed)`, `applyMove(state, move, byPlayerId)` reducer — the single source of truth for transitions. Pure, deterministic, returns new state + validation errors.
-- `src/engine/duel.ts`: `resolveBattle(state)` → compares the declared stat across all committed cards, returns `DuelResult` (winnerId | tie), with **effective stats** hook (abilities plug in later).
-- `src/engine/winCondition.ts`: `groupVictoryCount(player)` = distinct non-null groups in winner pile; `checkWinCondition(state)` → primary (≥6 distinct groups) and alternate end (a player has emptied deck **and** hand → most winners wins).
-- **Battle flow implemented:** draw → declare stat → commit (face-down) → reveal → [ability phase = no-op for now] → resolve → distribute to winner/loser piles → tie → Vakharc (recursive) → next attacker.
-- **Verify (unit tests):** deck validation cases; a scripted 2- and 3-player game runs to a group-victory; tie triggers Vakharc; Vakharc chains; alternate-end fires on deck+hand exhaustion.
+## Phase 3 — Ability engine ✅
+All 21 ability archetypes implemented in `abilities.ts`. Clockwise ability loop with use/skip/reserve (tartalékolás). Immediate abilities (Samurai, Priest) fire at reveal. Cross-battle effects: Sensei buff consumed into `battleMods` at next-battle start; Pancrator forces Vakharc via `forcedNextVakharc`; Boy sets next-round attacker via `pendingBuffs.nextRoundAttacker`.
+Executor uses a two-step flow: `useAbility` sets `pendingVictimDiscard` on `BattleState`; victim submits `chooseDiscard`.
 
-## Phase 3 — Ability engine
-**Goal:** the interactive clockwise ability loop with reserve/immediate/swap, then all 21 abilities.
-- `src/engine/abilities.ts`: registry keyed by `archetype` → handler implementing the relevant hook(s):
-  ```
-  onBattleStart · onReveal · onAbilityPhase · onResolve · onWinningOverride · afterBattle
-  ```
-- **Ability loop** (in `state.ts`): starting at attacker, clockwise; each player may `use` / `skip` / `reserve` their ability (once). `Azonnal` abilities (`immediate-*`) fire at `onReveal` out of order. Swaps (`swap-*`, `force-opponent-deck-swap`) and reactive plays reopen the loop; loop ends when all players have used or permanently declined. Reserve cost = move one winner → loser pile, earns another pass.
-- **Winning overrides** (`winning-override-copy` Police, `winning-override-on-tie` Sheriff) resolved before stat comparison via `onWinningOverride`.
-- **Effective-stat modifiers** (Sumo, Army, Cave, Boy, Sensei buff, Karate, Gladiator/Bond stat-change, Captain sum) computed as layered modifiers feeding `resolveBattle`.
-- **Cross-battle effects:** Sensei (`buff-next-battle`), Pancrator (`trigger-vakharc-on-loss`), Boy (`attacker-plus-reflex` next-round attacker) stored on `PlayerState` / `GameState` and consumed next battle.
-- **Implementation order within the phase** (simple → complex):
-  1. Stat math: Sumo, Army, Cave, Sensei, Boy, Gladiator, Bond, Captain, Karate.
-  2. Pile/hand manip: Angel, Executor, Funny, Indian (scry), Jungle (blind deck swap), Master (hand swap).
-  3. Overrides & meta: Samurai/Priest nullify, Police, Sheriff, Devil (copy-ability), Pancrator.
-- **Verify:** one focused unit test per archetype; an integration test that runs a multi-ability battle (swap → reopen loop → nullify → override).
+## Phase 4 — Persistence & realtime ✅
+Supabase migrations (`0001_profiles`, `0002_matches`, `0003_rls_policies`). `play-move` Edge Function. `useMatch` hook with Realtime subscription and optimistic state application.
 
-## Phase 4 — Persistence & realtime
-**Goal:** two browsers play the same match in real time.
-- `supabase/migrations/0001_profiles.sql`, `0002_matches.sql`, `0003_rls_policies.sql` (schema below); enable `matches` in the Realtime publication; `updated_at` trigger.
-- `supabase/functions/play-move/index.ts`: receives `{ matchId, move }`, loads `state`, calls the **same** `applyMove`, writes new `state` (+ `winner_id`, `status`), returns it. Rejects illegal/out-of-turn moves.
-- `src/hooks/useMatch.ts`: initial fetch → subscribe to `postgres_changes` on the row → expose `state`, `loading`, `error`, `isMyTurn`, and action helpers (`declareStat`, `commitCard`, `useAbility`, `reserve`, `skip`, `resolve`) that call the Edge Function. Stale-write guard via `updated_at`.
-- **Verify:** scripted move sequence applied through the function reproduces engine test results; manual two-tab smoke test.
+## Phase 5 — UI components ✅
+`CrokCard`, `Hand` / `OpponentHand`, `WinPile` / `LoserPile`, `DuelZone` (all ability pickers, victim discard panel), `GameBoard`.
 
-## Phase 5 — UI components
-**Goal:** the board renders state and dispatches actions.
-Build bottom-up: `StatBadge` → `CrokCard` (uses `/cards/NNN.jpg`, `faceDown` prop, ability footer) → `Hand` (own = face-up & selectable, opponents = face-down counts) → `WinPile` / `LoserPile` (visible, group-victory tally) → `DuelZone` (committed cards, declared stat, ability-phase controls: use/skip/reserve, swap target pickers) → `GameBoard` (N-player seating, opponents around top/sides, you at bottom).
-- **Verify:** Storybook-less manual pass; board renders a mid-game `GameState` fixture correctly, including face-down opponents and a tie/Vakharc state.
+## Phase 6 — Auth, lobby, matchmaking ✅
+`useAuth`, `src/lib/auth.ts`, `src/lib/matches.ts`. `Lobby.tsx` (create/join by invite code). `Match.tsx` (waiting room + live game).
 
-## Phase 6 — Auth, lobby, matchmaking
-**Goal:** sign in and get two players into a match via link.
-- Username/password auth screens; create `profiles` row on signup.
-- `src/pages/Lobby.tsx`: create match (host) → generates invite link/code; join via link. Deck selection (MVP: a default legal deck per player; custom deck builder is post-MVP).
-- `src/pages/Match.tsx`: wires `useMatch` + `GameBoard`; handles waiting → active → finished.
-- **Verify:** end-to-end on two machines/tabs: sign in, host, share link, join, play to a win.
+## Phase 7 — Deploy ✅ (config) / pending (provision)
+GitHub Actions workflow at `.github/workflows/deploy.yml` builds and deploys to Cloudflare Pages on push to `main`. Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets.
+Supabase project still needs provisioning: run migrations + deploy `play-move` + disable email confirmation + set env vars in Cloudflare Pages.
 
-## Phase 7 — Deploy
-- Cloudflare Pages build config; env vars; `_redirects` verified.
-- Supabase project: run migrations, deploy `play-move`, set auth to username/password.
-- **Verify:** production URL playable.
+---
 
-## Data model (GameState blob)
+# Canonical data model
 
 ```ts
 type Phase = 'lobby' | 'draw' | 'declare' | 'commit' | 'reveal'
            | 'ability' | 'resolve' | 'vakharc' | 'finished';
 
+interface PendingBuffs {
+  senseiAllStats?: number;      // +N to all stats on next committed Crok
+  nextRoundAttacker?: boolean;  // Boy: become attacker next round
+}
+
+interface BattleMods {
+  power: number;
+  intelligence: number;
+  reflex: number;
+}
+
 interface PlayerState {
   userId: string;
-  deck: number[];           // card ids, top = index 0 (server-only order; clients see counts)
-  hand: number[];           // card ids (own hand visible only to owner via RLS-filtered view or client trust)
-  committed?: number | null;// card id played face-down this battle
-  winners: number[];        // winner pile (card ids) — group-victory derived from this
-  losers: number[];         // loser pile (card ids)
-  pendingBuffs?: {           // cross-battle effects
-    senseiAllStats?: number; // +1 next battle
-    nextRoundAttacker?: boolean;
-  };
-  abilityUsed?: boolean;     // used this battle
-  abilityReserved?: boolean; // reserved (gets another pass)
+  deck: number[];               // card ids; index 0 = top
+  hand: number[];               // card ids
+  committed: number | null;     // card id played face-down
+  extraCommitted: number | null;// Captain Grand Battle extra card
+  winners: number[];
+  losers: number[];
+  pendingBuffs: PendingBuffs;
+  battleMods: BattleMods;       // accumulated ability modifiers this battle
+  abilityUsed: boolean;
+  abilityReserved: boolean;
 }
 
 interface BattleState {
   declaredStat: StatKey;
   attackerId: string;
-  abilityCursor: string;     // whose ability turn (clockwise)
-  nullifiedGroups?: GroupSlug[]; // from Priest
-  nullifyAll?: boolean;          // from Samurai
-  forcedNextVakharc?: { byPlayerId: string }; // Pancrator
+  abilityCursor: string;        // whose ability turn in the clockwise loop
+  nullifiedGroups: string[];    // Priest: groups nullified this battle
+  nullifiedPlayers: string[];   // Samurai: player ids nullified this battle
+  forcedWinnerId: string | null;// Police / Sheriff winning-override
+  grandBattle: boolean;         // Captain: use summed stat values
+  pendingVictimDiscard: {       // Executor: victim must choose via chooseDiscard
+    executorPlayerId: string;
+    targetPlayerId: string;
+  } | null;
   log: string[];
 }
 
 interface GameState {
   matchId: string;
-  players: PlayerState[];        // clockwise order; players[0] = original attacker
+  players: PlayerState[];       // clockwise; players[0] = original attacker
   attackerIndex: number;
   phase: Phase;
-  battle?: BattleState;
-  vakharcDepth: number;          // recursive tie nesting
-  seed: number;                  // for deterministic shuffles
-  winnerId?: string;
-  version: number;               // optimistic-concurrency / stale-write guard
+  battle: BattleState | null;
+  vakharcDepth: number;
+  forcedNextVakharc: { byPlayerId: string } | null; // Pancrator
+  seed: number;
+  winnerId: string | null;
+  version: number;              // stale-write guard
 }
 
 type Move =
   | { type: 'declareStat'; stat: StatKey }
   | { type: 'commitCard'; cardId: number }
-  | { type: 'useAbility'; payload?: AbilityPayload }   // target picks, choices
+  | { type: 'commitVakharc'; cardId: number }
+  | { type: 'useAbility'; payload?: AbilityPayload }
   | { type: 'reserveAbility' }
   | { type: 'skipAbility' }
   | { type: 'resolve' }
-  | { type: 'commitVakharc' };
+  | { type: 'chooseDiscard'; cardId: number };  // Executor victim's card choice
 ```
 
-> **Hidden information note:** with a single `state` JSONB, a player could inspect opponents' hands/decks via devtools. MVP accepts this (trusted friends over an invite link) but the Edge Function is the authority for *legality*. Post-MVP hardening: per-player redacted state views, or move hands/decks to server-only and push redacted snapshots.
+---
 
-## Testing strategy
+# Testing strategy
 - **Engine unit tests (Vitest):** deck validation, each ability archetype, win conditions, Vakharc recursion, alternate end. This is where correctness lives.
-- **Integration test:** full scripted N-player game through `applyMove`, then the identical sequence through `play-move` to prove client/server parity.
-- **Manual:** two-tab realtime smoke test per phase 4+.
+- **Integration test:** full scripted game through `applyMove`, then the same sequence through `play-move` to prove client/server parity.
+- **Manual:** two-tab realtime smoke test.
 
-## Post-MVP backlog
-Custom deck builder + saved decks; spectator mode; reconnection/resume; hidden-info hardening; animations; more card sets (data is additive — append to `cards.json` + drop `NNN.jpg`); ranked/queue matchmaking; profile stats.
+---
+
+# Post-MVP backlog
+Custom deck builder + saved decks; spectator mode; reconnection/resume; hidden-info hardening (per-player redacted state); animations; more card sets (data is additive — append to `cards.json` + drop `NNN.jpg`); ranked/queue matchmaking; profile stats.
