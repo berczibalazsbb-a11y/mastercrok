@@ -1,0 +1,28 @@
+project_id = "mastercrok"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[auth]
+enabled = true
+# Username/password sign-in. Email confirmation off for the MVP so a username
+# (mapped to a synthetic email) can sign in immediately.
+enable_signup = true
+enable_confirmations = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = false
+enable_confirmations = false
+
+[realtime]
+enabled = true
+
+[functions.play-move]
+verify_jwt = true
