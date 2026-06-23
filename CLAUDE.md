@@ -1,0 +1,209 @@
+# Master Crok — Project Guide
+
+## What this is
+
+Real-time multiplayer web implementation of the Hungarian trading card game "Master Crok" (Chio © 2001). N-player (min 2), browser-based, powered by Supabase Realtime.
+
+## Tech stack
+
+| Layer | Choice |
+|---|---|
+| Frontend | React + TypeScript (Vite) |
+| Styling | Tailwind CSS |
+| Backend / sync | Supabase (Postgres + Realtime WebSockets) |
+| Auth | Supabase Auth (TBD: anonymous / magic-link / OAuth) |
+| Hosting | Cloudflare Pages |
+| Edge logic | Supabase Edge Functions (move validation / duel resolution) |
+
+## Repository layout
+
+```
+mastercrok/
+├── CLAUDE.md
+├── index.html
+├── package.json
+├── vite.config.ts
+├── tailwind.config.js
+├── postcss.config.js
+├── tsconfig.json
+├── .env.example
+├── _redirects                        # Cloudflare Pages SPA fallback
+│
+├── supabase/
+│   ├── config.toml
+│   ├── migrations/
+│   │   ├── 0001_profiles.sql
+│   │   ├── 0002_matches.sql
+│   │   └── 0003_rls_policies.sql
+│   └── functions/
+│       └── play-move/
+│           └── index.ts              # server-authoritative move validator
+│
+└── src/
+    ├── main.tsx
+    ├── App.tsx
+    ├── lib/
+    │   └── supabaseClient.ts
+    ├── types/
+    │   ├── card.ts                   # CrokCard, StatKey, Group, Ability
+    │   └── game.ts                   # PlayerState, GameState, Move, DuelResult
+    ├── data/
+    │   └── cards.ts                  # full typed card DB (see Card Data section)
+    ├── engine/
+    │   ├── deck.ts                   # validateDeck()
+    │   ├── duel.ts                   # resolveDuel() pure function
+    │   ├── abilities.ts              # ability registry + hook system
+    │   └── winCondition.ts          # checkWinCondition()
+    ├── hooks/
+    │   └── useMatch.ts               # Realtime game-engine hook
+    ├── components/
+    │   ├── CrokCard.tsx
+    │   ├── GameBoard.tsx
+    │   ├── Hand.tsx
+    │   ├── DuelZone.tsx
+    │   ├── WinPile.tsx
+    │   └── StatBadge.tsx
+    └── pages/
+        ├── Lobby.tsx
+        └── Match.tsx
+```
+
+## Official rules summary
+
+### Deck building
+- **Minimum 10 Croks**, recommended 40. All decks should be roughly equal size.
+- **Copy limit per named card:** `Math.floor(deckSize / 10)` — i.e. ≤1 copy at 10 cards, ≤2 at 20+, ≤3 at 30+.
+- The group limit from earlier planning ("max 8 per group") is **incorrect and dropped**.
+
+### Game start
+- Each player shuffles their deck face-down and draws **4 cards** to hand.
+- Randomly determine the first **attacker**; all others are **defenders**.
+
+### Battle loop (each round)
+1. Every player draws **1 card** at the start of each battle.
+2. Attacker **declares the stat** (erő / intelligencia / reflex).
+3. Attacker places a Crok **face-down**; then defenders do the same, clockwise.
+4. All Croks are **revealed simultaneously**.
+5. **Ability phase:** starting with the attacker, clockwise, each player may use their Crok's ability (each ability once per battle):
+   - `Azonnal…` ("Immediately…") abilities (e.g. Samurai, Priest) fire **instantly, out of turn order**.
+   - Conditional abilities can be **used**, **skipped**, or **reserved (tartalékolás)**.
+   - **Reserving costs:** move one of your *winning* Croks to your *loser* pile; you get another pass later.
+   - Swaps (Master, Jungle) and reactive abilities (Bond, Police) can cause the loop to revisit players.
+   - Loop continues until every player has used or permanently declined.
+6. **Resolution:** highest value in the declared stat wins (unless a winning-override ability fires, e.g. Police, Sheriff).
+7. Winner puts their Crok in their **winner pile** beside the deck; losers put theirs in their **loser pile** on the other side (both visible).
+8. **Tie:** all battling Croks go to their owners' loser piles → **Vakharc (blind battle)**: each player places their top deck card (or from hand if deck empty) face-down; last defender from the tied battle becomes new attacker, picks the stat, then reveal resumes.
+9. **Vakharc can chain** (recursive ties are handled).
+
+### Win conditions
+- **Primary:** first player to collect **6 winning Croks of 6 distinct group icons** wins.
+  - Group-victory count = count of distinct group icons in the winner pile (duplicates don't add).
+  - The count can **decrease** (reserve cost moves winners to losers).
+- **Alternate end:** when any player plays their last Crok, the game ends immediately; player with **most total winners** wins.
+
+### N-player specifics
+- Turn order is **clockwise**; ability phase follows the same clockwise order starting from the attacker.
+- On tie, the **last defender** (the player just before the full clockwise circle completes) becomes the new attacker.
+
+## Card data
+
+The physical set is **21 cards** (numbered 1/21–21/21, Chio © 2001). The live card database sites return HTTP 403 to automated fetches. **Card data must be entered manually** into `src/data/cards.ts`.
+
+### Known cards (from scans + rules text)
+
+| # | Name | Group | Power | Int | Reflex | Ability name | Ability text (HU) |
+|---|---|---|---|---|---|---|---|
+| 1 | Master Crok | ninja (dots) | 8 | 7 | 9 | Váratlan csapás | Kicserélheted egy másik, a kezedben levő Crokra, ha az nem Master Crok. |
+| 2 | Bond Crok | spy (revolver) | 5 | 6 | 7 | Trükkös fordulat | Megváltoztathatod a harc típusát: erő, intelligencia vagy reflex. |
+| 3 | Devil Crok | devil (trident) | 6 | 6 | 6 | Lélekrablás | Használhatja egy másik játékos, egyik vesztes Crokjának képességét. |
+| 4–21 | **UNKNOWN** — paste from the blog/cards page | | | | | | |
+
+Named in rules text (group/stats unknown): **Samurai** (`Azonnal` ability), **Priest** (`Azonnal` ability), **Jungle** (swap ability), **Police** (winning-override ability), **Sheriff** (winning-override ability).
+
+### How to add cards
+Edit `src/data/cards.ts` — the file exports a `CrokCard[]` array. Each entry must conform to the `CrokCard` interface in `src/types/card.ts`. Group values should be the slug of the group icon name (e.g. `"ninja"`, `"spy"`, `"devil"`).
+
+## Ability system architecture
+
+Abilities are registered in `src/engine/abilities.ts` as handlers keyed by a stable `abilityId`. The engine exposes hooks at these phases:
+
+```
+onBattleStart        → before stat declaration
+onReveal             → after all Croks are revealed (immediate abilities fire here)
+onAbilityPhase       → player's turn in the ability loop (conditional abilities)
+onResolve            → before stat comparison (stat-override abilities)
+onWinningOverride    → replaces stat comparison entirely (Police, Sheriff)
+afterBattle          → cleanup / reserve resolution
+```
+
+### Known ability archetypes
+
+| Archetype | Examples | Notes |
+|---|---|---|
+| `swap-from-hand` | Master, Jungle | Replace played card with another from hand; reopens ability loop |
+| `change-stat` | Bond | Change the declared stat; reactive timing |
+| `immediate` | Samurai, Priest | Fire at `onReveal`, out of turn order |
+| `winning-override` | Police, Sheriff | Force win regardless of stat values |
+| `copy-ability` | Devil | Borrow a losing Crok's ability for this battle |
+
+## Database schema (planned)
+
+### `profiles`
+```sql
+id uuid PK → auth.users
+username text UNIQUE NOT NULL
+avatar_url text
+wins int DEFAULT 0
+created_at timestamptz
+```
+
+### `matches`
+```sql
+id uuid PK
+players uuid[]              -- ordered clockwise; players[0] is original attacker
+status match_status         -- 'waiting' | 'active' | 'finished'
+attacker_index int          -- current attacker (index into players[])
+state jsonb                 -- full GameState blob
+winner_id uuid
+created_at timestamptz
+updated_at timestamptz
+```
+
+RLS: only players in the `players` array may read or update their own match.
+
+### `profiles` RLS
+- Anyone can read profiles (for lobby display).
+- Users may only update their own profile.
+
+## Move validation
+
+Moves are validated server-side in the `play-move` Edge Function to prevent cheating on the face-down commit step. The client sends a **move action** (not raw state); the function validates, advances state, and writes back to `matches.state`. Realtime triggers push the new state to all players.
+
+## Environment variables
+
+```
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+```
+
+Set in `.env.local` for development (gitignored). Set as Cloudflare Pages environment variables for production.
+
+## Open questions (answers needed before implementation)
+
+- [ ] **Auth method:** anonymous / email magic-link / OAuth?
+- [ ] **Matchmaking:** room code / invite link / random queue?
+- [ ] **Card data:** paste full 21-card list with stats + ability texts.
+- [ ] **Ability phase detail for Devil Crok:** which pile counts as "opponent's losing Croks" — any player's loser pile, or specifically the player who just lost this battle?
+- [ ] **Bond Crok timing:** fired during `onAbilityPhase` (after reveal) — but the rules imply Bond is a *reactive* play to an opponent's swap. Confirm ability fires post-reveal and not pre-commit.
+
+## Build order
+
+1. Vite + React + TS + Tailwind init; Supabase client; env wiring
+2. SQL migrations + RLS (run via Supabase CLI or dashboard)
+3. TypeScript types (`card.ts`, `game.ts`)
+4. Pure engine: `deck.ts` → `duel.ts` → `abilities.ts` → `winCondition.ts` + unit tests
+5. Card data entry (manual — requires card list from you)
+6. `useMatch` hook + `play-move` Edge Function
+7. UI components: `StatBadge` → `CrokCard` → `Hand` → `WinPile` → `DuelZone` → `GameBoard`
+8. Pages: `Lobby` → `Match`
+9. Cloudflare Pages deploy config + `_redirects`
