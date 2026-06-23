@@ -4,8 +4,16 @@ import { isMyTurn } from '../engine/selectors';
 import type { GameState, Move, AbilityPayload } from '../types/game';
 import type { StatKey } from '../types/card';
 
+export interface MatchMeta {
+  players: string[];
+  status: 'waiting' | 'active' | 'finished';
+  inviteCode: string;
+  hostId: string;
+}
+
 export interface UseMatch {
   state: GameState | null;
+  meta: MatchMeta | null;
   loading: boolean;
   error: string | null;
   myTurn: boolean;
@@ -25,6 +33,7 @@ export interface UseMatch {
  */
 export function useMatch(matchId: string | null, userId: string | null): UseMatch {
   const [state, setState] = useState<GameState | null>(null);
+  const [meta, setMeta] = useState<MatchMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const sending = useRef(false);
@@ -36,15 +45,31 @@ export function useMatch(matchId: string | null, userId: string | null): UseMatc
     }
     let cancelled = false;
 
+    const readMeta = (row: {
+      players?: string[];
+      status?: MatchMeta['status'];
+      invite_code?: string;
+      host_id?: string;
+    }) =>
+      setMeta({
+        players: row.players ?? [],
+        status: row.status ?? 'waiting',
+        inviteCode: row.invite_code ?? '',
+        hostId: row.host_id ?? '',
+      });
+
     (async () => {
       const { data, error: e } = await supabase!
         .from('matches')
-        .select('state')
+        .select('state, players, status, invite_code, host_id')
         .eq('id', matchId)
         .single();
       if (cancelled) return;
       if (e) setError(e.message);
-      else setState((data?.state as GameState) ?? null);
+      else if (data) {
+        setState((data.state as GameState) ?? null);
+        readMeta(data);
+      }
       setLoading(false);
     })();
 
@@ -54,8 +79,9 @@ export function useMatch(matchId: string | null, userId: string | null): UseMatc
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` },
         (payload) => {
-          const next = (payload.new as { state?: GameState }).state;
-          if (next) setState(next);
+          const row = payload.new as { state?: GameState } & Parameters<typeof readMeta>[0];
+          if (row.state) setState(row.state);
+          readMeta(row);
         },
       )
       .subscribe();
@@ -93,6 +119,7 @@ export function useMatch(matchId: string | null, userId: string | null): UseMatc
 
   return {
     state,
+    meta,
     loading,
     error,
     myTurn: !!(state && userId && isMyTurn(state, userId)),
